@@ -48,11 +48,15 @@
 *{box-sizing:border-box}
 html{height:100%;overflow:hidden}
 body{
-  margin:0;height:100%;
+  margin:0;height:100%;color:var(--text);background:var(--bg);overflow:hidden;
+  -webkit-user-select:none;user-select:none;
+}
+/* The layout lives in its own container pinned to the window's four edges, so elements that
+   browser extensions inject into <body> can never add rows and push the bottom bar up. */
+.app{
+  position:fixed;inset:0;
   display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;row-gap:var(--gap);
   padding:clamp(10px,1.8vh,22px) var(--page-x);
-  color:var(--text);background:var(--bg);overflow:hidden;
-  -webkit-user-select:none;user-select:none;
 }
 /* Static backdrop, painted once: wallpaper, faint grid, low red glow. */
 body::before{
@@ -74,13 +78,32 @@ body::after{
 .topbar{
   position:relative;display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;gap:clamp(16px,2vw,36px);
   padding:clamp(10px,1.5vh,16px) clamp(16px,1.6vw,28px);
-  border:1px solid #ffffff17;border-radius:var(--radius);
-  background:linear-gradient(180deg,#45474b,#232325 55%,#18181a);
-  box-shadow:inset 0 1px 0 #ffffff26,0 16px 40px #000c;
 }
+/* Shared finish for both bars: brushed steel with a red glow in one corner and gold in the other. */
+.topbar,.statusbar{
+  border:1px solid #ffffff1a;border-radius:var(--radius);
+  background:
+    radial-gradient(ellipse 38% 160% at 0% 0%,#ba002026,transparent 62%),
+    radial-gradient(ellipse 32% 160% at 100% 100%,#9985421c,transparent 62%),
+    linear-gradient(180deg,#37383c 0%,#222225 48%,#161618 100%);
+  box-shadow:inset 0 1px 0 #ffffff2b,inset 0 -1px 0 #0000009e,0 16px 40px #000c;
+}
+/* Small gold corner brackets. */
+.topbar::before,.statusbar::after{
+  content:"";position:absolute;inset:5px;pointer-events:none;border-radius:calc(var(--radius) - 4px);
+  --b:#b09a5299;--l:12px;
+  background:
+    linear-gradient(var(--b),var(--b)) left top/var(--l) 1.5px,linear-gradient(var(--b),var(--b)) left top/1.5px var(--l),
+    linear-gradient(var(--b),var(--b)) right top/var(--l) 1.5px,linear-gradient(var(--b),var(--b)) right top/1.5px var(--l),
+    linear-gradient(var(--b),var(--b)) left bottom/var(--l) 1.5px,linear-gradient(var(--b),var(--b)) left bottom/1.5px var(--l),
+    linear-gradient(var(--b),var(--b)) right bottom/var(--l) 1.5px,linear-gradient(var(--b),var(--b)) right bottom/1.5px var(--l);
+  background-repeat:no-repeat;
+}
+/* Glowing red accent line where each bar faces the tiles. */
 .topbar::after{
   content:"";position:absolute;left:18px;right:18px;bottom:-1px;height:2px;pointer-events:none;
   background:linear-gradient(90deg,transparent,var(--red) 18%,var(--red-hot) 50%,var(--red) 82%,transparent);
+  box-shadow:0 0 14px #f2295b8c,0 0 3px #f2295b;
 }
 .company-logo{display:block;width:clamp(160px,13vw,240px);height:auto}
 .station{display:grid;gap:5px;padding-left:clamp(16px,2vw,36px);border-left:1px solid #ffffff21}
@@ -96,7 +119,12 @@ body::after{
 .network-dot::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--ok);opacity:0}
 .network.offline{color:#e8a65e}.network.offline .network-dot,.network.offline .network-dot::after{background:#e8a65e}
 .chip svg{width:14px;height:14px;color:var(--red-hot)}
-.clock{text-align:right;white-space:nowrap;padding-left:clamp(16px,2vw,36px);border-left:1px solid #ffffff21}
+/* Clock sits in a recessed panel. */
+.clock{
+  text-align:right;white-space:nowrap;padding:clamp(6px,.9vh,10px) clamp(12px,1vw,18px);
+  border:1px solid #ffffff14;border-radius:10px;
+  background:linear-gradient(180deg,#00000066,#00000033);box-shadow:inset 0 2px 10px #000a,0 1px 0 #ffffff12;
+}
 .clock-face{display:flex;align-items:baseline;justify-content:flex-end;gap:8px;font-family:var(--display);font-variant-numeric:tabular-nums;line-height:1}
 .clock-time{font-size:clamp(28px,2.6vw,50px);font-weight:700;letter-spacing:.01em}
 .clock-seconds{font-size:clamp(13px,1vw,19px);font-weight:600;color:var(--soft);min-width:2ch}
@@ -248,30 +276,39 @@ main{
 .tile[data-key="9"] .logo img{-webkit-mask-image:radial-gradient(ellipse at 50% 48%,#000 55%,transparent 72%);mask-image:radial-gradient(ellipse at 50% 48%,#000 55%,transparent 72%)}
 
 /* ---------- Status bar ---------- */
-/* A floating bar that mirrors the masthead: three columns, all on one centered row. */
+/* A floating bar that mirrors the masthead. The two outer blocks are mirror images
+   (icon + two-line label), with the keyboard hints centered between them. */
 .statusbar{
   position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:24px;
-  min-height:clamp(38px,4.8vh,48px);padding:0 clamp(16px,1.6vw,28px);
-  border:1px solid #ffffff14;border-radius:var(--radius);
-  background:linear-gradient(180deg,#232326,#141416 60%,#0e0e10);
-  box-shadow:inset 0 1px 0 #ffffff12,0 -8px 30px #0009;
-  font-family:var(--display);font-size:clamp(9px,.62vw,11px);font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+  min-height:clamp(48px,5.8vh,62px);padding:0 clamp(12px,1.1vw,18px);
+  font-family:var(--display);font-size:clamp(9px,.6vw,11px);font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--soft);
 }
 .statusbar::before{
   content:"";position:absolute;left:18px;right:18px;top:-1px;height:2px;pointer-events:none;
   background:linear-gradient(90deg,transparent,var(--red) 18%,var(--red-hot) 50%,var(--red) 82%,transparent);
+  box-shadow:0 0 14px #f2295b8c,0 0 3px #f2295b;
 }
-.sb-item{display:flex;align-items:center;gap:10px;min-width:0;max-width:100%;white-space:nowrap;overflow:hidden}
-.sb-item > *{flex:none}
-.sb-item strong{color:var(--text);font-weight:700}
+.sb-item{display:flex;align-items:center;gap:12px;min-width:0;white-space:nowrap}
 .sb-left{justify-self:start}
-.sb-mid{justify-self:center;gap:8px;color:var(--soft)}
-.sb-mid kbd{font-size:1em}
-.sb-right{justify-self:end;color:var(--soft)}
-.sb-sep{width:1px;height:14px;background:#ffffff26}
-.statusbar svg{flex:none;width:15px;height:15px;color:var(--red-hot)}
-.notice-more{color:var(--muted)}
-@media(max-width:2100px){.notice-more{display:none}}
+.sb-right{justify-self:end}
+.sb-badge{
+  flex:none;display:grid;place-items:center;width:clamp(30px,2.1vw,38px);height:clamp(30px,2.1vw,38px);
+  border:1px solid #ba002066;border-radius:9px;background:linear-gradient(160deg,#ba002033,#ba00200d);
+}
+.sb-badge svg{width:55%;height:55%;color:var(--red-hot)}
+.sb-crest{flex:none;width:clamp(26px,1.8vw,32px);aspect-ratio:190/216;background:url("corvus-logo.png") left center/auto 100% no-repeat}
+.sb-text{display:grid;gap:4px;min-width:0;line-height:1.1}
+.sb-text strong{color:var(--text);font-weight:700;overflow:hidden;text-overflow:ellipsis}
+.sb-text small{font-family:"Montserrat","Segoe UI",sans-serif;font-size:clamp(10px,.66vw,12px);font-weight:500;letter-spacing:.01em;text-transform:none;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.sb-right .sb-text{text-align:right}
+.sb-mid{justify-self:center;gap:10px}
+.sb-pill{
+  display:flex;align-items:center;gap:8px;padding:6px 14px 6px 8px;
+  border:1px solid #ffffff1c;border-radius:999px;background:#0000004d;
+}
+.sb-pill kbd{margin:0;font-size:1em}
+.sb-pill svg{width:14px;height:14px;margin-left:4px;color:var(--red-hot)}
+.sb-dot{width:5px;height:5px;background:var(--gold);transform:rotate(45deg)}
 
 /* Launch confirmation. */
 .toast{
@@ -485,9 +522,9 @@ html.lite .spot,html.lite .streak,html.lite .lk-shine,html.lite .lk-glow,html.li
 }
 @media(max-width:1250px){
   .chips .chip:last-child{display:none}
-  .notice-more{display:none}
 }
 @media(max-width:1100px){.sb-mid{display:none}}
+@media(max-width:1350px) and (min-width:1101px){.sb-pill:last-child,.sb-dot{display:none}}
 @media(max-width:1100px){
   .chips{display:none}
   .topbar{grid-template-columns:auto 1fr auto}
@@ -496,6 +533,7 @@ html.lite .spot,html.lite .streak,html.lite .lk-shine,html.lite .lk-glow,html.li
 @media(max-width:900px){
   html{overflow:auto}
   body{height:auto;min-height:100%;overflow:visible}
+  .app{position:static;min-height:100%}
   main{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none;grid-auto-rows:160px}
   .station{display:none}
   .topbar{grid-template-columns:auto 1fr}
@@ -508,7 +546,7 @@ html.lite .spot,html.lite .streak,html.lite .lk-shine,html.lite .lk-glow,html.li
   main{grid-template-columns:1fr;grid-auto-rows:130px}
   .tag{display:none}
   .name{font-size:15px}
-  .statusbar .notice-more{display:none}
+  .sb-text small{display:none}
   .loader-core{--w:84vw}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}.loader{display:none}}
@@ -539,6 +577,7 @@ html.lite .spot,html.lite .streak,html.lite .lk-shine,html.lite .lk-glow,html.li
   </div>
 </div>
 
+<div class="app">
 <header class="topbar wrap" aria-label="Corvus Protection Group kiosk">
   <img class="company-logo" src="corvus-logo.png" alt="Corvus Protection Group" width="768" height="216">
   <div class="station">
@@ -673,10 +712,21 @@ html.lite .spot,html.lite .streak,html.lite .lk-shine,html.lite .lk-glow,html.li
 </main>
 
 <footer class="statusbar wrap" aria-label="Kiosk status">
-    <span class="sb-item sb-left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg><strong>Authorized personnel only</strong><span class="notice-more">· Activity may be monitored and recorded</span></span>
-    <span class="sb-item sb-mid"><kbd>1</kbd>–<kbd>9</kbd>Quick launch<span class="sb-sep" aria-hidden="true"></span>Opens in a new tab</span>
-    <span class="sb-item sb-right"><span class="ghost" aria-hidden="true"><svg viewBox="0 0 24 28"><path d="M12 1C6.5 1 3 5.5 3 11v15l3-2.2 3 2.2 3-2.2 3 2.2 3-2.2 3 2.2V11c0-5.5-3.5-10-9-10Z" fill="#f1f1f3"/><ellipse cx="9" cy="11" rx="1.4" ry="2" fill="#111"/><ellipse cx="15" cy="11" rx="1.4" ry="2" fill="#111"/><ellipse cx="12" cy="16.5" rx="1.3" ry="1.8" fill="#111"/></svg></span>Corvus Protection Group</span>
+    <div class="sb-item sb-left">
+      <span class="sb-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg></span>
+      <span class="sb-text"><strong>Authorized personnel only</strong><small>Activity may be monitored and recorded</small></span>
+    </div>
+    <div class="sb-item sb-mid">
+      <span class="sb-pill"><kbd>1</kbd>–<kbd>9</kbd>Quick launch</span>
+      <span class="sb-dot" aria-hidden="true"></span>
+      <span class="sb-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>Opens in a new tab</span>
+    </div>
+    <div class="sb-item sb-right"><span class="ghost" aria-hidden="true"><svg viewBox="0 0 24 28"><path d="M12 1C6.5 1 3 5.5 3 11v15l3-2.2 3 2.2 3-2.2 3 2.2 3-2.2 3 2.2V11c0-5.5-3.5-10-9-10Z" fill="#f1f1f3"/><ellipse cx="9" cy="11" rx="1.4" ry="2" fill="#111"/><ellipse cx="15" cy="11" rx="1.4" ry="2" fill="#111"/><ellipse cx="12" cy="16.5" rx="1.3" ry="1.8" fill="#111"/></svg></span>
+      <span class="sb-text"><strong>Corvus Protection Group</strong><small>Officer operations portal</small></span>
+      <span class="sb-crest" aria-hidden="true"></span>
+    </div>
 </footer>
+</div>
 
 <svg class="web web-tl" viewBox="0 0 120 120" aria-hidden="true"><g fill="none" stroke="#fff" stroke-width=".8" stroke-linejoin="round"><path d="M0 0 120 0M0 0 116 31M0 0 104 60M0 0 85 85M0 0 60 104M0 0 31 116M0 0 0 120"/><path d="M30 0 29 7.8 26 15 21.2 21.2 15 26 7.8 29 0 30"/><path d="M55 0 53.1 14.2 47.6 27.5 38.9 38.9 27.5 47.6 14.2 53.1 0 55"/><path d="M80 0 77.3 20.7 69.3 40 56.6 56.6 40 69.3 20.7 77.3 0 80"/><path d="M105 0 101.4 27.2 90.9 52.5 74.2 74.2 52.5 90.9 27.2 101.4 0 105"/></g></svg>
 <svg class="web web-tr" viewBox="0 0 120 120" aria-hidden="true"><g fill="none" stroke="#fff" stroke-width=".8" stroke-linejoin="round"><path d="M0 0 120 0M0 0 116 31M0 0 104 60M0 0 85 85M0 0 60 104M0 0 31 116M0 0 0 120"/><path d="M30 0 29 7.8 26 15 21.2 21.2 15 26 7.8 29 0 30"/><path d="M55 0 53.1 14.2 47.6 27.5 38.9 38.9 27.5 47.6 14.2 53.1 0 55"/><path d="M80 0 77.3 20.7 69.3 40 56.6 56.6 40 69.3 20.7 77.3 0 80"/><path d="M105 0 101.4 27.2 90.9 52.5 74.2 74.2 52.5 90.9 27.2 101.4 0 105"/></g></svg>
