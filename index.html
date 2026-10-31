@@ -4,296 +4,625 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Corvus | Officer Operations</title>
+<script>
+/* Light mode for weak hardware: fewer ambient effects. Force with ?lite=1 or ?lite=0. */
+(function(){
+  var q=location.search.match(/[?&]lite=([01])/),n=navigator,lite;
+  if(q)lite=q[1]==='1';
+  else lite=(n.hardwareConcurrency&&n.hardwareConcurrency<=2)||(n.deviceMemory&&n.deviceMemory<=2)||(n.connection&&n.connection.saveData);
+  if(lite)document.documentElement.classList.add('lite');
+})();
+</script>
+<link rel="preload" href="corvus-logo.png" as="image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Non-blocking web fonts: the page renders immediately with system fonts. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600&family=Orbitron:wght@600;700;800&display=swap" media="print" onload="this.media='all'">
 <style>
-:root{color-scheme:dark;font-family:"Segoe UI",Arial,sans-serif;--text:#f5f6f8;--muted:#9db7d7;--accent:#ffd34e}
-*{box-sizing:border-box}
-html,body{margin:0;min-height:100%}
-body{min-height:100vh;padding:clamp(24px,3.1vh,40px) clamp(24px,3.87vw,80px) clamp(28px,5.5vh,60px);color:var(--text);background:radial-gradient(ellipse at 48% 0%,#0d141e80,transparent 65%),#05090e}
-body::before{content:"";position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(#709acc05 1px,transparent 1px),linear-gradient(90deg,#709acc05 1px,transparent 1px);background-size:64px 64px;mask-image:linear-gradient(#000,transparent)}
-header,main{position:relative;max-width:1800px;margin:auto}
-header{margin-bottom:clamp(20px,2.8vh,32px)}
-.eyebrow{font-size:clamp(13px,1.13vw,22px);font-weight:600;letter-spacing:.21em;text-transform:uppercase;color:var(--accent)}
-h1{margin:0 0 3px;font-size:clamp(34px,3.86vw,78px);line-height:1.15;letter-spacing:-.025em;font-weight:750}
-.hint{margin:0;color:#aac0db;font-size:clamp(16px,1.27vw,25px);line-height:1.6}
-kbd,.key{font-family:inherit;color:#edf2fc;background:linear-gradient(145deg,#192332,#101720);border:1px solid #3a4e69;box-shadow:inset 0 0 0 1px #adcaff0b;border-radius:9px}
-kbd{display:inline-block;padding:0 11px;line-height:1.45;margin:0 3px}
-main{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,1.15vw,24px);grid-auto-rows:minmax(160px,1fr);height:calc(100vh - clamp(160px,21vh,210px) - clamp(28px,5.5vh,60px))}
-.tile{position:relative;display:flex;align-items:center;min-width:0;padding:clamp(16px,1.1vw,24px);gap:clamp(18px,1.7vw,34px);border:1px solid #315c8d;border-radius:19px;color:var(--text);text-decoration:none;background:radial-gradient(ellipse at 0 0,#23354f66,transparent 60%),linear-gradient(125deg,#101721,#090e15);box-shadow:inset 0 1px 0 #a8ccff08,0 10px 22px #0002;transition:transform .16s,border-color .16s,box-shadow .16s}
-.tile:hover,.tile:focus-visible{outline:none;transform:translateY(-3px);border-color:#7fb8ff;box-shadow:0 0 0 2px #78b1ff33,0 12px 30px #0007}
-.tile:active{transform:scale(.985)}
-.tile.launching{border-color:var(--accent)}
-.logo{position:relative;display:flex;align-items:center;justify-content:center;flex:0 0 40%;height:82%;min-width:0;padding-right:clamp(15px,1.4vw,28px);border-right:1px solid #25384d}
-.logo img{display:block;max-width:100%;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 5px 6px #0008)}
-.logo .letter{display:none;font-size:56px;font-weight:700}.logo.failed img{display:none}.logo.failed .letter{display:block}
-.info{min-width:0;padding-right:8px}
-.name{font-size:clamp(20px,2.05vw,40px);font-weight:700;letter-spacing:-.025em;line-height:1.2}
-.desc{font-size:clamp(14px,1.26vw,25px);color:var(--muted);margin-top:5px;line-height:1.3}
-.key{position:absolute;top:18px;right:21px;display:grid;place-items:center;width:39px;height:39px;font-size:23px}
-.go{position:absolute;right:26px;bottom:25px;width:28px;height:28px;color:#7896ba;stroke-width:1.6}
-.tile[data-key="4"] .logo{flex-basis:54%}
-.tile[data-key="4"]{gap:20px}
-.tile[data-key="4"] .name,.tile[data-key="7"] .name{font-size:clamp(19px,1.8vw,35px)}
-
-@media(max-width:1100px){main{height:auto;grid-auto-rows:180px}.name{font-size:24px}.key{width:29px;height:29px;font-size:18px;top:12px;right:12px}.go{right:16px;bottom:16px}.tile{gap:18px}.desc{font-size:15px}.tile[data-key="4"] .logo{flex-basis:43%}}
-@media(max-width:900px){main{grid-template-columns:repeat(2,minmax(0,1fr))}h1{margin:8px 0}.eyebrow{letter-spacing:.15em}}
-@media(max-width:560px){body{padding:24px 18px}main{grid-template-columns:1fr;grid-auto-rows:165px}.name,.tile[data-key="4"] .name,.tile[data-key="7"] .name{font-size:25px}.desc{font-size:16px}.logo{flex-basis:40%}.eyebrow{font-size:11px}h1{font-size:37px}.hint{font-size:15px}}
-/* Layered light keeps the service marks crisp against the dark glass. */
-body{background:radial-gradient(ellipse at 8% 26%,#16467b22,transparent 48%),radial-gradient(ellipse at 94% 80%,#007d9b13,transparent 45%),radial-gradient(ellipse at 50% -20%,#243c5960,transparent 65%),#05090e}
-.eyebrow{text-shadow:0 0 20px #ffd34e38}
-h1{text-shadow:0 2px 2px #0005,0 0 38px #cce0ff12}
-.tile{isolation:isolate;--glow:65,148,255;border-color:#4077ac;box-shadow:inset 0 1px 0 #c4e2ff12,inset 0 0 28px #448bdb08,0 0 16px #3189ef0b,0 10px 26px #0005;transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}
-.tile::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;background:radial-gradient(ellipse at 19% 52%,rgba(var(--glow),.17),transparent 62%),linear-gradient(125deg,#a1cfff06,transparent 50%);transition:opacity .22s;opacity:.8}
-.tile::after{content:"";position:absolute;left:9%;right:9%;top:-1px;height:1px;pointer-events:none;background:linear-gradient(90deg,transparent,#9ed1ff90,transparent);box-shadow:0 0 12px #6cbbff40}
-.tile[data-key="1"]{--glow:55,119,255}
-.tile[data-key="2"]{--glow:255,46,65}
-.tile[data-key="3"],.tile[data-key="5"]{--glow:0,221,216}
-.tile[data-key="4"],.tile[data-key="7"]{--glow:255,185,57}
-.logo{border-right:0}
-.logo::before{content:"";position:absolute;inset:8% 15% 8% 0;z-index:-1;border-radius:50%;pointer-events:none;background:radial-gradient(ellipse,rgba(var(--glow),.22),transparent 70%);filter:blur(12px)}
-.logo::after{content:"";position:absolute;right:0;top:5%;bottom:5%;width:1px;background:linear-gradient(transparent,#5276a06b 25%,#5276a06b 75%,transparent);box-shadow:0 0 9px #599eff10}
-.logo img{filter:drop-shadow(0 5px 6px #0009) drop-shadow(0 0 10px rgba(var(--glow),.25));transition:filter .22s ease,transform .22s ease}
-.name{text-shadow:0 2px 8px #0005}
-.key{box-shadow:inset 0 1px 2px #c7e1ff0d,0 2px 8px #0005,0 0 10px #5c9fea0b}
-.go{transition:color .22s ease,transform .22s ease,filter .22s ease}
-.tile:hover,.tile:focus-visible{border-color:#8cc7ff;box-shadow:inset 0 0 32px #76baff0b,0 0 0 1px #8dc7ff30,0 0 25px rgba(var(--glow),.2),0 16px 32px #0007}
-.tile:hover::before,.tile:focus-visible::before{opacity:1}
-.tile:hover .logo img,.tile:focus-visible .logo img{transform:scale(1.035);filter:drop-shadow(0 5px 6px #0009) drop-shadow(0 0 16px rgba(var(--glow),.4))}
-.tile:hover .go,.tile:focus-visible .go{color:#b9ddff;transform:translate(2px,-2px);filter:drop-shadow(0 0 5px #5caeff80)}
-.tile:focus-visible{outline:2px solid #b8ddff;outline-offset:4px}
-.tile.launching{border-color:var(--accent);box-shadow:0 0 25px #ffd34e35,inset 0 0 20px #ffd34e0d}
-/* Individual artwork proportions follow the reference dashboard. */
-.tile{overflow:hidden}
-.logo{height:88%}
-.tile[data-key="1"] .logo img{width:auto;max-width:100%;height:auto;max-height:100%;aspect-ratio:1;object-fit:contain;border-radius:50%}
-.tile[data-key="2"] .logo img{mix-blend-mode:screen;transform:scale(1.14);filter:brightness(1.35) saturate(1.25) drop-shadow(0 0 10px #ff203035);mask-image:radial-gradient(ellipse at center,#000 50%,transparent 75%)}
-.tile[data-key="4"] .logo img{mix-blend-mode:screen;transform:scale(1.16)}
-.tile[data-key="6"] .logo{flex-basis:50%}
-.tile[data-key="8"] .logo{flex-basis:47%}
-.tile[data-key="8"] .logo img{height:82%;border:1px solid #328ee9;border-radius:12px;object-fit:cover;box-shadow:0 0 18px #007aff26,0 5px 12px #0006}
-.tile[data-key="9"]{--glow:0,145,255;gap:clamp(18px,1.45vw,28px)}
-.tile[data-key="9"] .logo{flex-basis:55%;height:calc(100% + 26px);padding-right:clamp(18px,1.5vw,30px)}
-.tile[data-key="9"] .logo::before{inset:6% 4% 0 -9%;background:radial-gradient(ellipse,#007eff36,transparent 70%);filter:blur(10px)}
-.tile[data-key="9"] .logo::after{top:16%;bottom:16%}
-.tile[data-key="9"] .logo img{width:100%;height:100%;object-fit:fill;mix-blend-mode:screen;mask-image:radial-gradient(ellipse at 50% 45%,#000 52%,#000c 66%,transparent 79%);filter:brightness(1.18) contrast(1.12) saturate(1.15) drop-shadow(0 0 6px #008cff55);transform:translateY(2%) scale(1.04)}
-.tile[data-key="9"] .name{font-size:clamp(23px,1.95vw,38px)}
-.tile[data-key="9"] .desc{white-space:nowrap}
-.tile[data-key="2"]:is(:hover,:focus-visible) .logo img{transform:scale(1.18);filter:brightness(1.45) saturate(1.25) drop-shadow(0 0 14px #ff203060)}
-.tile[data-key="4"]:is(:hover,:focus-visible) .logo img{transform:scale(1.2)}
-.tile[data-key="9"]:is(:hover,:focus-visible) .logo img{transform:translateY(2%) scale(1.075);filter:brightness(1.25) contrast(1.12) saturate(1.15) drop-shadow(0 0 12px #008cff77)}
-@media(min-width:1101px){
-  body{display:flex;flex-direction:column;height:100vh;min-height:720px}
-  header{flex:none;width:100%}
-  main{flex:1;width:100%;height:auto;min-height:0;grid-template-rows:1fr 1fr 1fr;grid-auto-rows:unset}
-  .tile[data-key="5"] .logo{flex-basis:43%}
-  .tile[data-key="6"]{gap:24px}
-  .tile[data-key="6"] .name{font-size:clamp(24px,1.95vw,38px)}
+/* Palette and type follow corvusstrategicsolutions.com: black, steel gray, Corvus red, muted gold.
+   Performance: animations only use transform and opacity; no animated filters or shadows. */
+:root{
+  color-scheme:dark;
+  --bg:#000;
+  --steel:#53565a;
+  --charcoal:#222223;
+  --line:#2a2b2f;
+  --text:#fff;
+  --soft:#c9cbce;
+  --muted:#8e9094;
+  --dim:#5c5e62;
+  --red:#ba0020;
+  --red-hot:#f2295b;
+  --red-soft:#ba002040;
+  --gold:#b09a52;
+  --gold-soft:#99854240;
+  --ok:#4fcf8f;
+  --radius:14px;
+  --page-x:clamp(16px,2.6vw,56px);
+  --gap:clamp(10px,1.6vh,20px);
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --display:"Orbitron","Segoe UI",sans-serif;
+  font-family:"Montserrat","Segoe UI",system-ui,Arial,sans-serif;
 }
-@media(min-width:1101px) and (max-width:1450px){
-  .tile{gap:18px;padding:16px}
-  .name{font-size:clamp(23px,2vw,29px)}
-  .desc{font-size:clamp(15px,1.22vw,18px)}
-  .tile[data-key="4"] .logo{flex-basis:49%}
-  .tile[data-key="9"] .logo{flex-basis:51%}
+*{box-sizing:border-box}
+html{height:100%;overflow:hidden}
+body{
+  margin:0;height:100%;
+  display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;row-gap:var(--gap);
+  padding:clamp(10px,1.8vh,22px) var(--page-x) 0;
+  color:var(--text);background:var(--bg);overflow:hidden;
+  -webkit-user-select:none;user-select:none;
+}
+/* Static backdrop, painted once: wallpaper, faint grid, low red glow. */
+body::before{
+  content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;
+  background:url("optimized/backdrop.jpg") 70% center/cover no-repeat;opacity:.18;
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    linear-gradient(#ffffff05 1px,transparent 1px) 0 0/56px 56px,
+    linear-gradient(90deg,#ffffff05 1px,transparent 1px) 0 0/56px 56px,
+    radial-gradient(ellipse 50% 40% at 0% 100%,#ba00201c,transparent 70%),
+    radial-gradient(ellipse 45% 35% at 100% 0%,#99854212,transparent 70%),
+    radial-gradient(ellipse 85% 75% at 50% 50%,#000000a6,#000000f2 80%);
+}
+.wrap{width:100%;max-width:1800px;margin:0 auto;min-width:0}
+
+/* ---------- Masthead (styled after the corvusstrategicsolutions.com header) ---------- */
+.topbar{
+  position:relative;display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;gap:clamp(16px,2vw,36px);
+  padding:clamp(10px,1.5vh,16px) clamp(16px,1.6vw,28px);
+  border:1px solid #ffffff17;border-radius:var(--radius);
+  background:linear-gradient(180deg,#45474b,#232325 55%,#18181a);
+  box-shadow:inset 0 1px 0 #ffffff26,0 16px 40px #000c;
+}
+.topbar::after{
+  content:"";position:absolute;left:18px;right:18px;bottom:-1px;height:2px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,var(--red) 18%,var(--red-hot) 50%,var(--red) 82%,transparent);
+}
+.company-logo{display:block;width:clamp(160px,13vw,240px);height:auto}
+.station{display:grid;gap:5px;padding-left:clamp(16px,2vw,36px);border-left:1px solid #ffffff21}
+.station-label{font-family:var(--display);font-size:clamp(9px,.62vw,11px);font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:var(--gold)}
+.greeting{font-family:var(--display);font-size:clamp(13px,1vw,18px);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.chips{display:flex;justify-content:flex-end;gap:10px;min-width:0}
+.chip{
+  display:flex;align-items:center;gap:9px;padding:8px 14px;white-space:nowrap;
+  border:1px solid #ffffff1c;border-radius:999px;background:#0000004d;
+  font-family:var(--display);font-size:clamp(9px,.6vw,11px);font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--soft);
+}
+.network-dot{position:relative;width:8px;height:8px;border-radius:50%;background:var(--ok)}
+.network-dot::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--ok);opacity:0}
+.network.offline{color:#e8a65e}.network.offline .network-dot,.network.offline .network-dot::after{background:#e8a65e}
+.chip svg{width:14px;height:14px;color:var(--red-hot)}
+.clock{text-align:right;white-space:nowrap;padding-left:clamp(16px,2vw,36px);border-left:1px solid #ffffff21}
+.clock-face{display:flex;align-items:baseline;justify-content:flex-end;gap:8px;font-family:var(--display);font-variant-numeric:tabular-nums;line-height:1}
+.clock-time{font-size:clamp(28px,2.6vw,50px);font-weight:700;letter-spacing:.01em}
+.clock-seconds{font-size:clamp(13px,1vw,19px);font-weight:600;color:var(--soft);min-width:2ch}
+.clock-period{font-size:clamp(10px,.72vw,13px);font-weight:700;letter-spacing:.12em;color:var(--gold)}
+.clock-date{margin-top:6px;font-size:clamp(11px,.8vw,14px);font-weight:600;color:var(--soft)}
+
+/* ---------- Heading ---------- */
+.intro{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:0 4px}
+.eyebrow{display:flex;align-items:center;gap:10px;font-family:var(--display);font-size:clamp(9px,.68vw,12px);font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+.eyebrow .dot{width:7px;height:7px;background:var(--red-hot);transform:rotate(45deg)}
+h1{margin:8px 0 6px;font-family:var(--display);font-size:clamp(22px,2.3vw,44px);font-weight:800;letter-spacing:.035em;line-height:1.08;text-transform:uppercase}
+h1 em{font-style:normal;color:transparent;-webkit-text-stroke:1px #ffffff8c}
+.hint{margin:0;color:var(--soft);font-size:clamp(12px,.9vw,16px);font-weight:500}
+kbd{
+  display:inline-grid;place-items:center;min-width:1.8em;height:1.7em;padding:0 .45em;margin:0 2px;
+  font:700 .82em/1 var(--display);color:var(--text);
+  background:linear-gradient(303deg,var(--red),var(--steel) 60%);border:1px solid #ffffff2b;border-radius:5px;
+}
+.count{display:flex;align-items:baseline;gap:10px;white-space:nowrap;font-family:var(--display);font-size:clamp(9px,.65vw,12px);font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.count strong{font-size:clamp(22px,1.9vw,36px);font-weight:800;letter-spacing:.02em;color:var(--text)}
+
+/* ---------- Service grid ---------- */
+main{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));
+  gap:var(--gap);min-height:0;
+}
+.tile{
+  --c:186,0,32;
+  position:relative;isolation:isolate;display:flex;align-items:center;gap:clamp(14px,1.6vw,30px);
+  min-width:0;min-height:0;padding:clamp(12px,1.6vh,20px) clamp(16px,1.4vw,26px);overflow:hidden;
+  color:var(--text);text-decoration:none;touch-action:manipulation;
+  border:1px solid var(--line);border-radius:var(--radius);
+  background:linear-gradient(160deg,#1d1d20 0%,#111113 45%,#0a0a0b 100%);
+  box-shadow:inset 0 1px 0 #ffffff12,0 12px 30px #000b;
+  transition:transform .22s var(--ease),border-color .22s ease;
+}
+/* Steel-to-red sweep, faded in on hover (opacity only). */
+.tile::before{
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(300deg,#ba002052 0%,#53565a1f 50%,transparent 78%);
+  opacity:0;transition:opacity .25s ease;
+}
+/* Top edge highlight that turns Corvus red on hover. */
+.tile::after{
+  content:"";position:absolute;left:8%;right:8%;top:0;height:1px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,#ffffff40,transparent);
+}
+.edge{
+  position:absolute;left:8%;right:8%;top:0;height:2px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,var(--red-hot),transparent);
+  opacity:0;transform:scaleX(.3);transition:opacity .25s ease,transform .35s var(--ease);
+}
+.tile:hover,.tile:focus-visible{outline:none;transform:translateY(-4px);border-color:#ba002099}
+.tile:hover::before,.tile:focus-visible::before{opacity:1}
+.tile:hover .edge,.tile:focus-visible .edge{opacity:1;transform:none}
+.tile:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.tile:active{transform:scale(.985)}
+.tile.launching{border-color:var(--gold)}
+
+/* Light streak that crosses the tile once on hover (transform only). */
+.streak{
+  position:absolute;top:0;bottom:0;left:0;width:28%;z-index:-1;pointer-events:none;
+  background:linear-gradient(90deg,transparent,#ffffff10,transparent);
+  transform:translateX(-120%) skewX(-18deg);
+}
+.tile:hover .streak,.tile:focus-visible .streak{animation:streak .85s ease-out}
+@keyframes streak{to{transform:translateX(460%) skewX(-18deg)}}
+
+/* Cursor spotlight: a pre-painted circle moved with transform, so it never repaints. */
+.spot{
+  position:absolute;left:0;top:0;width:460px;height:460px;margin:-230px 0 0 -230px;z-index:-1;pointer-events:none;
+  border-radius:50%;background:radial-gradient(circle,#f2295b1f,transparent 65%);
+  opacity:0;transition:opacity .25s ease;will-change:transform;
+}
+.tile:hover .spot{opacity:1}
+
+/* Logo sits directly on the tile with a soft brand-colored glow and a divider. */
+.logo{--pad:4%;position:relative;flex:0 0 40%;align-self:stretch;min-width:0;margin:2% 0}
+.logo::before{
+  content:"";position:absolute;inset:-12% -4%;z-index:-1;pointer-events:none;
+  background:radial-gradient(closest-side,rgba(var(--c),.26),rgba(var(--c),.07) 55%,transparent);
+  opacity:.75;transition:opacity .25s ease;
+}
+.logo::after{
+  content:"";position:absolute;right:calc(-0.8vw - 1px);top:8%;bottom:8%;width:1px;
+  background:linear-gradient(transparent,#ffffff2e 25%,#ffffff2e 75%,transparent);
+}
+.tile:hover .logo::before,.tile:focus-visible .logo::before{opacity:1}
+/* Pinned inside its box so artwork can never resize the tile. */
+.logo img{
+  position:absolute;inset:var(--pad);display:block;width:calc(100% - var(--pad) * 2);height:calc(100% - var(--pad) * 2);object-fit:contain;
+  transition:transform .3s var(--ease);
+}
+.tile:hover .logo img,.tile:focus-visible .logo img{transform:scale(1.06)}
+.logo .letter{display:none;position:absolute;inset:0;place-items:center;font:800 54px var(--display);color:rgb(var(--c))}
+.logo.failed img{display:none}.logo.failed .letter{display:grid}
+
+.info{flex:1;min-width:0;padding-right:clamp(10px,1vw,18px)}
+.tag{
+  display:inline-flex;align-items:center;gap:6px;margin-bottom:clamp(6px,1vh,12px);padding:3px 9px 3px 8px;
+  font-family:var(--display);font-size:clamp(8px,.56vw,10px);font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);
+  border:1px solid var(--gold-soft);border-radius:3px;background:#9985421a;
+}
+.tag::before{content:"";width:5px;height:5px;background:currentColor;transform:rotate(45deg)}
+.name{display:block;font-family:var(--display);font-size:clamp(14px,1.28vw,25px);font-weight:700;letter-spacing:.02em;line-height:1.2;text-transform:uppercase;overflow-wrap:break-word}
+.desc{display:block;margin-top:clamp(5px,.8vh,9px);font-size:clamp(12px,.92vw,17px);font-weight:500;color:var(--muted);line-height:1.3}
+.key{
+  position:absolute;top:clamp(10px,1.4vh,16px);right:clamp(10px,1vw,16px);
+  display:grid;place-items:center;width:clamp(26px,1.9vw,36px);height:clamp(26px,1.9vw,36px);
+  font-family:var(--display);font-size:clamp(12px,.95vw,17px);font-weight:700;color:var(--soft);
+  background:linear-gradient(180deg,#36383c,#1b1b1d);border:1px solid #ffffff24;border-radius:8px;
+  box-shadow:inset 0 1px 0 #ffffff1a;
+}
+/* Red key face, pre-painted and faded in so hover never repaints the gradient. */
+.key::before{content:"";position:absolute;inset:-1px;border-radius:inherit;z-index:-1;background:linear-gradient(303deg,var(--red),#7d1b2b 45%,var(--steel));opacity:0;transition:opacity .2s ease}
+.key{isolation:isolate}
+.tile:hover .key,.tile:focus-visible .key{color:var(--text)}
+.tile:hover .key::before,.tile:focus-visible .key::before{opacity:1}
+.go{
+  position:absolute;right:clamp(14px,1.2vw,22px);bottom:clamp(12px,1.5vh,20px);
+  width:clamp(18px,1.3vw,24px);height:clamp(18px,1.3vw,24px);color:var(--dim);
+  transition:transform .22s var(--ease),color .22s ease;
+}
+.tile:hover .go,.tile:focus-visible .go{color:var(--red-hot);transform:translate(3px,-3px)}
+
+.ripple{
+  position:absolute;left:0;top:0;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;pointer-events:none;z-index:-1;
+  border:2px solid var(--red-hot);animation:ripple .6s ease-out forwards;
+}
+@keyframes ripple{from{opacity:1}to{transform:var(--at) scale(18);opacity:0}}
+
+/* Per-service glow color and artwork fit (static, painted once). */
+.tile[data-key="1"]{--c:58,120,255}
+.tile[data-key="2"]{--c:230,40,55}
+.tile[data-key="3"]{--c:40,170,230}
+.tile[data-key="4"]{--c:225,180,70}
+.tile[data-key="5"]{--c:70,200,210}
+.tile[data-key="6"]{--c:234,67,53}
+.tile[data-key="7"]{--c:212,170,80}
+.tile[data-key="8"]{--c:40,110,210}
+.tile[data-key="9"]{--c:30,140,255}
+.tile[data-key="1"] .logo{--pad:3%}
+.tile[data-key="2"] .logo{--pad:0%}
+.tile[data-key="4"] .logo,.tile[data-key="5"] .logo{flex-basis:43%;--pad:2%}
+.tile[data-key="6"] .logo{flex-basis:42%;--pad:3%}
+.tile[data-key="8"] .logo{--pad:10%}
+.tile[data-key="8"] .logo img{left:50%;right:auto;width:auto;max-width:calc(100% - var(--pad) * 2);aspect-ratio:1;object-fit:cover;translate:-50% 0;border-radius:10px;border:1px solid #2f6fd0}
+.tile[data-key="9"] .logo{--pad:0%}
+.tile[data-key="9"] .logo img{-webkit-mask-image:radial-gradient(ellipse at 50% 48%,#000 55%,transparent 72%);mask-image:radial-gradient(ellipse at 50% 48%,#000 55%,transparent 72%)}
+
+/* ---------- Status bar ---------- */
+.statusbar{
+  margin:0 calc(-1 * var(--page-x));padding:11px var(--page-x);
+  border-top:1px solid #ffffff12;background:linear-gradient(180deg,#141416,#000);
+  font-family:var(--display);font-size:clamp(8px,.6vw,10px);font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#7f8185;
+}
+.statusbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.statusbar span{display:flex;align-items:center;gap:10px;min-width:0}
+.statusbar svg{flex:none;width:14px;height:14px;color:var(--red-hot)}
+
+/* Launch confirmation. */
+.toast{
+  position:fixed;left:50%;bottom:clamp(44px,6vh,64px);z-index:10;display:flex;align-items:center;gap:12px;
+  padding:12px 20px 12px 16px;border:1px solid #ba002088;border-radius:6px;
+  background:linear-gradient(303deg,#ba0020,#2a2b2d 65%);box-shadow:0 18px 40px #000c;
+  font-family:var(--display);font-size:clamp(11px,.75vw,13px);font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  opacity:0;transform:translate(-50%,12px);pointer-events:none;transition:opacity .2s ease,transform .2s var(--ease);
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast svg{width:18px;height:18px}
+
+/* ---------- Ambient motion (opacity/transform only; off in lite mode) ---------- */
+.colon{animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:.25}}
+.eyebrow .dot{animation:diamond 2.4s ease-in-out infinite}
+@keyframes diamond{50%{transform:rotate(225deg)}}
+.network-dot::after{animation:ping 2.4s ease-out infinite}
+@keyframes ping{0%{opacity:.6;transform:scale(1)}70%,100%{opacity:0;transform:scale(2.6)}}
+.network.offline .network-dot::after{animation:none}
+
+/* ---------- Halloween (shown only in October; JS toggles html.spooky) ---------- */
+.spooky-chip,.spider-drop{display:none}
+html.spooky .spooky-chip{display:flex;color:#ff9a3c;border-color:#ff7a1a55;background:#ff7a1a14}
+.spooky-chip svg{width:16px;height:16px;color:inherit}
+.spooky-chip .face{animation:candle 2.2s steps(1) infinite}
+@keyframes candle{0%,100%{opacity:1}30%{opacity:.6}34%{opacity:1}70%{opacity:.75}}
+/* A spider dangling on its thread just below the masthead. */
+html.spooky .spider-drop{
+  display:block;position:absolute;top:100%;right:23%;width:40px;height:clamp(54px,8vh,86px);overflow:hidden;pointer-events:none;z-index:2;
+}
+.spider{position:absolute;left:0;bottom:0;width:40px;height:130px;transform-origin:20px 0;animation:dangle 3.4s ease-in-out infinite}
+@keyframes dangle{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-14px) rotate(3deg)}}
+html.open.spooky .spider-drop{animation:spider-in 1.1s cubic-bezier(.3,1.4,.5,1) 1s backwards}
+@keyframes spider-in{from{transform:translateY(-100%)}}
+/* Cobwebs in the top corners of the screen. */
+.web,.bats,.pumpkin-patch{display:none}
+html.spooky .web{display:block;position:fixed;top:0;width:clamp(80px,7vw,130px);height:auto;z-index:6;pointer-events:none;opacity:.3}
+.web-tl{left:0}
+.web-tr{right:0;transform:scaleX(-1)}
+/* A small colony of bats flaps across the top of the screen every 22 seconds. */
+html.spooky .bats{display:block;position:fixed;inset:0;z-index:6;pointer-events:none;overflow:hidden}
+.bat{position:absolute;left:0;top:var(--y);width:var(--s);transform:translateX(-14vw);animation:bat-fly 22s linear var(--delay) infinite}
+@keyframes bat-fly{0%{transform:translate(-14vw,0)}36%,100%{transform:translate(114vw,var(--rise))}}
+.bat .bob{display:block;animation:bob .9s ease-in-out infinite alternate}
+@keyframes bob{to{transform:translateY(14px)}}
+.bat svg{display:block;width:100%;height:auto;transform-origin:50% 35%;animation:flap .15s ease-in-out infinite alternate}
+@keyframes flap{to{transform:scaleY(.4)}}
+.b1{--y:15vh;--s:54px;--delay:4s;--rise:-5vh}
+.b2{--y:23vh;--s:38px;--delay:4.5s;--rise:-9vh}
+.b3{--y:11vh;--s:32px;--delay:5.1s;--rise:2vh}
+.b4{--y:19vh;--s:26px;--delay:5.6s;--rise:-3vh}
+/* Glowing jack-o'-lanterns beside the service count. */
+html.spooky .pumpkin-patch{display:flex;align-items:flex-end;gap:0;position:relative;isolation:isolate;margin-right:clamp(10px,1.2vw,22px);align-self:flex-end}
+.pumpkin-patch::before{content:"";position:absolute;inset:-60% -40%;z-index:-1;background:radial-gradient(closest-side,#ff7a1a38,transparent);animation:candle 2.6s steps(1) infinite}
+.pumpkin-patch svg{display:block;height:auto}
+.pumpkin-patch .big{width:clamp(34px,2.6vw,48px)}
+.pumpkin-patch .small{width:clamp(24px,1.8vw,34px);margin-left:-6px}
+.pumpkin-patch .face{animation:candle 2.2s steps(1) infinite}
+.pumpkin-patch .small .face{animation-delay:-1.1s}
+html.lite .spider,html.lite .face,html.lite .pumpkin-patch::before{animation:none}
+html.lite .bats{display:none!important}
+
+/* ---------- Boot sequence ---------- */
+.loader{position:fixed;inset:0;z-index:100;overflow:hidden;animation:loader-failsafe .01s 6s forwards}
+@keyframes loader-failsafe{to{visibility:hidden}}
+/* Blast doors: two halves that part to reveal the console. */
+.door{position:absolute;left:0;right:0;height:50.5%;background-color:#000;transition:transform .75s cubic-bezier(.7,0,.2,1)}
+.door-top{top:0;background-image:radial-gradient(ellipse 55% 70% at 50% 100%,#ba002030,transparent 70%),linear-gradient(#ffffff06 1px,transparent 1px),linear-gradient(90deg,#ffffff06 1px,transparent 1px);background-size:auto,48px 48px,48px 48px;background-position:0 0,0 100%,0 0}
+.door-bottom{bottom:0;background-image:radial-gradient(ellipse 55% 70% at 50% 0%,#ba002030,transparent 70%),linear-gradient(#ffffff06 1px,transparent 1px),linear-gradient(90deg,#ffffff06 1px,transparent 1px);background-size:auto,48px 48px,48px 48px}
+html.open .door-top{transform:translateY(-101%)}
+html.open .door-bottom{transform:translateY(101%)}
+/* Seam that flashes across the screen just before the doors part. */
+.seam{
+  position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;z-index:1;
+  background:linear-gradient(90deg,transparent,var(--red-hot) 15%,#fff 50%,var(--red-hot) 85%,transparent);
+  transform:scaleX(0);opacity:0;transition:transform .35s cubic-bezier(.7,0,.2,1),opacity .2s ease;
+}
+html.closing .seam{transform:scaleX(1);opacity:1}
+html.open .seam{opacity:0;transition:opacity .4s ease .1s}
+html.closing :is(.corner,.loader-tag,.loader-core){opacity:0;transition:opacity .25s ease}
+
+/* Screen-corner brackets. */
+.corner{position:absolute;width:34px;height:34px;border:0 solid #ffffff4d;animation:corner-in .6s var(--ease) .05s backwards}
+.corner.tl{top:22px;left:22px;border-width:2px 0 0 2px;--from:-14px,-14px}
+.corner.tr{top:22px;right:22px;border-width:2px 2px 0 0;--from:14px,-14px}
+.corner.bl{bottom:22px;left:22px;border-width:0 0 2px 2px;--from:-14px,14px}
+.corner.br{bottom:22px;right:22px;border-width:0 2px 2px 0;--from:14px,14px}
+@keyframes corner-in{from{opacity:0;transform:translate(var(--from))}}
+.loader-tag{position:absolute;font-family:var(--display);font-size:10px;font-weight:600;letter-spacing:.26em;text-transform:uppercase;color:#ffffff59;animation:fade .6s ease .2s backwards}
+.loader-tag.tl{top:30px;left:70px}
+.loader-tag.br{bottom:30px;right:70px;color:var(--gold)}
+@keyframes fade{from{opacity:0}}
+
+.loader-core{
+  --w:clamp(280px,40vw,620px);
+  position:absolute;left:50%;top:50%;width:var(--w);transform:translate(-50%,-62%);
+  display:flex;flex-direction:column;align-items:center;gap:clamp(26px,5vh,44px);
+}
+/* The logo lockup is assembled from the two halves of corvus-logo.png (768x216: crest 0-190px, wordmark 220-768px). */
+.lockup{position:relative;width:100%;aspect-ratio:768/216}
+.lk-crest{
+  position:absolute;left:0;top:0;width:24.74%;height:100%;
+  background:url("corvus-logo.png") left center/auto 100% no-repeat;
+  transform:translateX(152%);
+  animation:crest-rise .8s cubic-bezier(.2,1.3,.4,1) .3s backwards,crest-slide .75s cubic-bezier(.7,0,.2,1) 1.15s forwards;
+}
+@keyframes crest-rise{from{opacity:0;transform:translateX(152%) translateY(26%) scale(.7)}}
+@keyframes crest-slide{from{transform:translateX(152%)}to{transform:none}}
+.lk-glow{
+  position:absolute;left:-14%;top:-40%;width:53%;height:180%;border-radius:50%;pointer-events:none;
+  background:radial-gradient(closest-side,#f2295b40,#ba002018 55%,transparent);
+  opacity:0;transform:translateX(71%);
+  animation:glow-in .8s ease .35s forwards,glow-slide .75s cubic-bezier(.7,0,.2,1) 1.15s forwards;
+}
+@keyframes glow-in{to{opacity:1}}
+@keyframes glow-slide{from{transform:translateX(71%)}to{transform:none}}
+.lk-word{position:absolute;left:28.65%;top:0;width:71.35%;height:100%;overflow:hidden}
+.lk-word::before{
+  content:"";position:absolute;inset:0;
+  background:url("corvus-logo.png") right center/auto 100% no-repeat;
+  transform:translateX(-105%);animation:word-out .8s cubic-bezier(.7,0,.2,1) 1.25s forwards;
+}
+@keyframes word-out{to{transform:none}}
+/* Shine masked to the logo artwork. */
+.lk-shine{
+  position:absolute;inset:0;overflow:hidden;pointer-events:none;
+  -webkit-mask:url("corvus-logo.png") center/100% 100% no-repeat;mask:url("corvus-logo.png") center/100% 100% no-repeat;
+}
+.lk-shine::before{
+  content:"";position:absolute;top:0;bottom:0;left:0;width:22%;
+  background:linear-gradient(100deg,transparent,#ffffffcc,transparent);
+  transform:translateX(-120%);animation:shine .9s ease-in-out 2.05s forwards;
+}
+@keyframes shine{to{transform:translateX(560%)}}
+/* Laser line that draws across before the crest appears. */
+.lk-line{
+  position:absolute;left:-6%;right:-6%;top:50%;height:2px;margin-top:-1px;
+  background:linear-gradient(90deg,transparent,var(--red-hot) 20%,#fff 50%,var(--red-hot) 80%,transparent);
+  transform:scaleX(0);animation:line-draw .55s cubic-bezier(.7,0,.2,1) .05s forwards,line-out .4s ease .55s forwards;
+}
+@keyframes line-draw{to{transform:scaleX(1)}}
+@keyframes line-out{to{opacity:0;transform:scaleX(1) scaleY(8)}}
+
+.loader-status{width:min(100%,420px);animation:fade-up .5s ease .6s backwards}
+.loader-meta{display:flex;justify-content:space-between;margin-bottom:10px;font-family:var(--display);font-size:clamp(9px,.65vw,11px);font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.loader-meta b{color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:.08em}
+.loader-bar{position:relative;height:2px;background:#ffffff14;overflow:hidden}
+.loader-bar i{position:absolute;inset:0;transform-origin:left;transform:scaleX(0);background:linear-gradient(90deg,var(--red),var(--red-hot))}
+@keyframes fade-up{from{opacity:0;transform:translateY(10px)}}
+
+/* Page entrance runs only once JS opens the doors; without JS the page simply shows. */
+html.open .topbar{animation:drop-in .8s var(--ease) .1s backwards}
+html.open .intro{animation:drop-in .7s var(--ease) .2s backwards}
+html.open .tile{animation:tile-in .7s var(--ease) backwards;animation-delay:calc(.28s + var(--i,0) * 60ms)}
+html.open .statusbar{animation:rise-in .6s var(--ease) .5s backwards}
+@keyframes drop-in{from{opacity:0;transform:translateY(-18px)}}
+@keyframes tile-in{from{opacity:0;transform:translateY(30px) scale(.95)}}
+@keyframes rise-in{from{opacity:0;transform:translateY(100%)}}
+
+/* ---------- Lite mode: keep the intro and hover feedback, drop everything ambient ---------- */
+html.lite .colon,html.lite .eyebrow .dot,html.lite .network-dot::after{animation:none}
+html.lite .spot,html.lite .streak,html.lite .lk-shine,html.lite .lk-glow,html.lite body::before{display:none}
+
+/* ---------- Responsive ---------- */
+@media(max-height:800px) and (min-width:901px){
+  .hint{display:none}
+  h1{margin-bottom:0}
+}
+@media(max-width:1250px){
+  .chips .chip:last-child{display:none}
 }
 @media(max-width:1100px){
-  .tile[data-key="6"] .logo,.tile[data-key="8"] .logo{flex-basis:44%}
-  .tile[data-key="9"] .logo{flex-basis:49%;height:calc(100% + 18px)}
-  .tile[data-key="9"] .name{font-size:24px}
-  .tile[data-key="9"] .desc{font-size:15px}
+  .chips{display:none}
+  .topbar{grid-template-columns:auto 1fr auto}
+  .count{display:none}
 }
-
-/* True alpha assets need no background blending or edge masks. */
-.tile[data-key="2"] .logo img{mix-blend-mode:normal;mask-image:none;transform:scale(1.1);filter:drop-shadow(0 4px 5px #0008) drop-shadow(0 0 10px #ff203035)}
-.tile[data-key="4"] .logo img{mix-blend-mode:normal;mask-image:none;transform:scale(1.08)}
-.tile[data-key="2"]:is(:hover,:focus-visible) .logo img{transform:scale(1.14);filter:drop-shadow(0 4px 5px #0008) drop-shadow(0 0 14px #ff203060)}
-.tile[data-key="4"]:is(:hover,:focus-visible) .logo img{transform:scale(1.12)}
-
-/* Remove the dark pixels directly, preserving the original logo geometry. */
-.tile[data-key="2"] .logo img,.tile[data-key="4"] .logo img{mix-blend-mode:normal;mask-image:none;filter:url(#remove-logo-background) drop-shadow(0 0 8px rgba(var(--glow),.2))}
-.tile[data-key="2"]:is(:hover,:focus-visible) .logo img,.tile[data-key="4"]:is(:hover,:focus-visible) .logo img{filter:url(#remove-logo-background) drop-shadow(0 0 12px rgba(var(--glow),.35))}
-
-/* Corvus kiosk masthead and live local clock. */
-.topbar{position:relative;flex:none;display:flex;align-items:center;justify-content:space-between;gap:24px;width:100%;max-width:1800px;margin:0 auto 22px;padding:14px 24px;border:1px solid #34465b;border-radius:16px;background:radial-gradient(ellipse at 0 0,#a58a3b13,transparent 55%),linear-gradient(110deg,#121b26ed,#0a1019f5);box-shadow:inset 0 1px 0 #e4efff0c,0 8px 30px #0004}
-.topbar::after{content:"";position:absolute;bottom:-1px;left:24px;right:24px;height:1px;background:linear-gradient(90deg,#c9b56b99,transparent 45%,#63a8ff80);pointer-events:none}
-.company-logo{display:block;width:clamp(180px,19vw,285px);height:auto;max-height:76px;object-fit:contain;filter:drop-shadow(0 0 12px #cdb7790e)}
-.station{display:flex;align-items:center;gap:10px;color:#9eaec3;font-size:11px;letter-spacing:.2em;text-transform:uppercase}
-.station-dot{width:6px;height:6px;flex:none;border-radius:50%;background:#d4bd79;box-shadow:0 0 12px #d4bd7960}
-.clock{flex:none;text-align:right}
-.clock-face{display:flex;align-items:baseline;justify-content:flex-end;gap:10px;font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1}
-.clock-time{font-size:clamp(32px,3.1vw,52px);font-weight:600;letter-spacing:-.045em;color:#f6f9ff;text-shadow:0 0 24px #78b9ff30}
-.clock-seconds{font-size:clamp(16px,1.3vw,23px);font-weight:400;color:#91b4dc;min-width:2ch}
-.clock-period{font-size:11px;color:#d4bd79;letter-spacing:.12em;font-weight:700}
-.clock-date{margin-top:8px;color:#96a9c2;font-size:12px;letter-spacing:.035em}
-@media(min-width:901px){
-  body{display:flex;flex-direction:column;height:100vh;height:100dvh;min-height:600px;padding:clamp(16px,2.3vh,28px) clamp(24px,3.87vw,80px) clamp(20px,3vh,36px)}
-  header{flex:none;width:100%;margin:0 auto 18px}
-  h1{font-size:clamp(32px,3.5vw,66px)}
-  main{flex:1;min-height:0;width:100%;height:auto;grid-template-rows:repeat(3,minmax(0,1fr));grid-auto-rows:unset;gap:clamp(12px,1.5vh,20px)}
-  .tile{min-height:0}
+@media(max-width:900px){
+  html{overflow:auto}
+  body{height:auto;min-height:100%;overflow:visible}
+  main{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none;grid-auto-rows:160px}
+  .station{display:none}
+  .topbar{grid-template-columns:auto 1fr}
+  .loader-tag{display:none}
 }
-@media(min-width:901px) and (max-height:820px){
-  .topbar{padding:10px 20px;margin-bottom:16px}
-  .company-logo{max-height:54px}
-  .clock-time{font-size:37px}
-  .clock-date{margin-top:5px;font-size:11px}
-  header{margin-bottom:14px}
-  .eyebrow{font-size:12px}
-  h1{font-size:clamp(32px,3.1vw,48px);line-height:1.15;margin-top:3px}
-  .hint{font-size:16px}
-  .tile{padding:12px 16px;gap:16px;border-radius:15px}
-  .key{top:10px;right:12px;width:28px;height:28px;font-size:17px}
-  .go{right:16px;bottom:14px;width:23px;height:23px}
-  .name,.tile[data-key="4"] .name,.tile[data-key="7"] .name,.tile[data-key="6"] .name,.tile[data-key="9"] .name{font-size:clamp(20px,1.8vw,28px)}
-  .desc{font-size:clamp(13px,1.15vw,17px);margin-top:4px}
-  .tile[data-key="9"] .desc{font-size:clamp(13px,1.15vw,17px)}
+@media(max-width:560px){
+  .company-logo{width:140px}
+  .clock{border-left:0;padding-left:0}
+  .clock-time{font-size:26px}
+  main{grid-template-columns:1fr;grid-auto-rows:130px}
+  .tag{display:none}
+  .name{font-size:15px}
+  .statusbar .notice-more{display:none}
+  .loader-core{--w:84vw}
 }
-@media(max-width:900px){.topbar{padding:14px 18px;margin-bottom:22px}.station{display:none}.company-logo{width:210px}.clock-time{font-size:34px}}
-@media(max-width:560px){.topbar{gap:14px;padding:12px}.company-logo{width:140px}.clock-face{gap:5px}.clock-time{font-size:28px}.clock-seconds{font-size:14px}.clock-period{font-size:9px}.clock-date{font-size:10px;max-width:160px;line-height:1.4}}
-
-/* A reserved footer row keeps the whole kiosk within the viewport. */
-html{height:100%;overflow:hidden}
-body{--page-x:clamp(20px,3.4vw,64px);display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;row-gap:clamp(10px,1.8vh,20px);height:100vh;height:100dvh;min-height:0;overflow:hidden;padding:clamp(12px,2vh,24px) var(--page-x) 0}
-.topbar,header{width:100%;margin:0 auto;min-width:0}
-main{width:100%;height:auto;min-height:0;margin:0 auto;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));grid-auto-rows:unset;gap:clamp(9px,1.6vh,18px)}
-.tile{min-height:0;touch-action:manipulation}
-.statusbar{position:relative;display:flex;align-items:center;justify-content:space-between;gap:20px;min-width:0;margin:0 calc(-1 * var(--page-x));padding:12px var(--page-x);border-top:1px solid #31425b66;background:linear-gradient(180deg,#0b1018f2,#080c12);box-shadow:0 -8px 28px #0002;color:#8190a5;font-size:10px;font-weight:500;line-height:1.4;letter-spacing:.13em;text-transform:uppercase}
-.statusbar::before{content:"";position:absolute;top:-1px;left:var(--page-x);right:var(--page-x);height:1px;background:linear-gradient(90deg,transparent,#6f9aca4d,transparent);pointer-events:none}
-.network{display:flex;align-items:center;gap:9px;white-space:nowrap;flex:none}
-.network-dot{width:8px;height:8px;border-radius:50%;background:#5bd69a;box-shadow:0 0 0 4px #5bd69a16,0 0 12px #5bd69a40}
-.network.offline{color:#d8a779}.network.offline .network-dot{background:#e4a35e;box-shadow:0 0 0 4px #e4a35e16,0 0 12px #e4a35e30}
-@media(min-width:761px) and (max-height:700px){
-  body{row-gap:10px;padding-top:10px}
-  .topbar{padding:8px 18px}.company-logo{max-height:43px}
-  .clock-time{font-size:30px}.clock-date{font-size:10px;margin-top:4px}
-  h1{font-size:clamp(28px,4.6vh,38px);margin:2px 0}.hint{font-size:14px}.eyebrow{font-size:10px}
-  .tile{padding:9px 12px;gap:12px;border-radius:13px}
-  .name,.tile[data-key="4"] .name,.tile[data-key="6"] .name,.tile[data-key="7"] .name,.tile[data-key="9"] .name{font-size:clamp(17px,2.9vh,23px)}
-  .desc,.tile[data-key="9"] .desc{font-size:12px}
-  .key{width:23px;height:23px;top:8px;right:9px;font-size:14px}.go{width:18px;height:18px;bottom:10px;right:12px}
-  .statusbar{padding-top:9px;padding-bottom:9px;font-size:9px}
-}
-@media(max-width:760px){
-  body{--page-x:16px;row-gap:10px;padding-top:12px}
-  .topbar{padding:10px 14px}.station{display:none}.company-logo{width:160px;max-height:45px}.clock-time{font-size:28px}
-  h1{font-size:28px;margin:3px 0}.eyebrow{font-size:10px}.hint{font-size:13px}
-  .tile{flex-direction:column;justify-content:center;gap:7px;padding:10px 6px;text-align:center;border-radius:12px}
-  .tile .logo,.tile[data-key] .logo{flex:0 1 auto;width:85%;height:48%;padding:0}
-  .logo::after{display:none}.tile .info{padding:0;width:100%}
-  .tile .name,.tile[data-key] .name{font-size:clamp(12px,2.3vw,18px)}
-  .tile .desc{display:none}.tile .key{top:6px;right:6px;width:20px;height:20px;font-size:12px}.tile .go{display:none}
-  .statusbar{gap:12px;font-size:8px;letter-spacing:.07em;padding-top:10px;padding-bottom:10px}
-  .clock-date{font-size:9px}.clock-seconds{font-size:14px}
-}
-
-@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}.loader{display:none}}
 </style>
 </head>
 <body>
-<svg width="0" height="0" aria-hidden="true" style="position:absolute;pointer-events:none"><defs>
-  <filter id="remove-logo-background" color-interpolation-filters="sRGB" x="-15%" y="-15%" width="130%" height="130%">
-    <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  4 0 0 0 -0.8"/>
-  </filter>
-</defs></svg>
 
-<div class="topbar" role="banner" aria-label="Corvus Protection Group kiosk">
-  <img class="company-logo" src="corvus-logo.png" alt="Corvus Protection Group" width="768" height="214">
-  <div class="station"><span class="station-dot" aria-hidden="true"></span>Officer operations</div>
-  <div class="clock" role="timer" aria-label="Current local time">
-    <div class="clock-face"><time class="clock-time" id="clockTime">--:--</time><span class="clock-seconds" id="clockSeconds" aria-hidden="true">00</span><span class="clock-period" id="clockPeriod">AM</span></div>
-    <div class="clock-date" id="clockDate"></div>
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="door door-top"></div>
+  <div class="door door-bottom"></div>
+  <div class="seam"></div>
+  <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+  <span class="loader-tag tl">Corvus Protection Group</span>
+  <span class="loader-tag br">Officer Operations</span>
+  <div class="loader-core">
+    <div class="lockup">
+      <div class="lk-glow"></div>
+      <div class="lk-line"></div>
+      <div class="lk-crest"></div>
+      <div class="lk-word"></div>
+      <div class="lk-shine"></div>
+    </div>
+    <div class="loader-status">
+      <div class="loader-meta"><span id="loaderText">Initializing</span><b id="loaderPct">000</b></div>
+      <div class="loader-bar"><i id="loaderBar"></i></div>
+    </div>
   </div>
 </div>
 
-<header>
-  <div class="eyebrow"><span id="greeting">Good morning</span> • Officer Operations</div>
-  <h1>Select a service to launch</h1>
-  <p class="hint">Tap a tile, or press <kbd>1</kbd>–<kbd>9</kbd> on the keyboard.</p>
+<header class="topbar wrap" aria-label="Corvus Protection Group kiosk">
+  <img class="company-logo" src="corvus-logo.png" alt="Corvus Protection Group" width="768" height="216">
+  <div class="station">
+    <span class="station-label">Officer Operations</span>
+    <span class="greeting" id="greeting">Good morning</span>
+  </div>
+  <div class="chips">
+    <span class="chip spooky-chip" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 6.5c-1.2-.9-3.4-1-5 .2C4.6 8.4 4 11.3 4.6 14.2c.7 3.3 3 5.3 5.4 4.8.8.6 1.3.8 2 .8s1.2-.2 2-.8c2.4.5 4.7-1.5 5.4-4.8.6-2.9 0-5.8-2.4-7.5-1.6-1.2-3.8-1.1-5-.2Z" fill="#ff7a1a"/><path d="M12 6.7V4.2c0-.8.6-1.4 1.6-1.6" fill="none" stroke="#4fae4f" stroke-width="1.6" stroke-linecap="round"/><g class="face" fill="#ffd34e"><path d="m7.6 11.4 2-2.2.8 2.8Z"/><path d="m16.4 11.4-2-2.2-.8 2.8Z"/><path d="M7.4 14.3c1.5 1.6 7.7 1.6 9.2 0-.4 2.2-2.4 3.3-4.6 3.3s-4.2-1.1-4.6-3.3Z"/></g></svg>Happy Halloween</span>
+    <span class="chip network" id="networkStatus" role="status"><span class="network-dot" aria-hidden="true"></span><span id="networkText">Network connected</span></span>
+    <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg>Authorized access</span>
+  </div>
+  <div class="clock" role="timer" aria-label="Current local time">
+    <div class="clock-face"><time class="clock-time" id="clockTime"><span id="clockH">--</span><span class="colon">:</span><span id="clockM">--</span></time><span class="clock-seconds" id="clockSeconds" aria-hidden="true">00</span><span class="clock-period" id="clockPeriod">AM</span></div>
+    <div class="clock-date" id="clockDate"></div>
+  </div>
+  <div class="spider-drop" aria-hidden="true">
+    <svg class="spider" viewBox="0 0 40 130">
+      <line x1="20" y1="0" x2="20" y2="104" stroke="#ffffff59" stroke-width="1"/>
+      <g fill="none" stroke="#9a9ca0" stroke-width="1.5" stroke-linecap="round">
+        <path d="M15 110 7 104 3 108M15 113 5 112 2 117M15 116 7 120 5 126M16 118 11 125 11 130"/>
+        <path d="M25 110 33 104 37 108M25 113 35 112 38 117M25 116 33 120 35 126M24 118 29 125 29 130"/>
+      </g>
+      <ellipse cx="20" cy="117" rx="6.5" ry="8" fill="#161617" stroke="#5c5e62"/>
+      <circle cx="20" cy="107.5" r="4.2" fill="#161617" stroke="#5c5e62"/>
+      <circle cx="18.4" cy="107" r="1" fill="#f2295b"/><circle cx="21.6" cy="107" r="1" fill="#f2295b"/>
+    </svg>
+  </div>
 </header>
 
-<main aria-label="Approved services">
+<section class="intro wrap">
+  <div>
+    <div class="eyebrow"><span class="dot" aria-hidden="true"></span>Service launcher</div>
+    <h1>Select a service <em>to launch</em></h1>
+    <p class="hint">Tap a tile, or press <kbd>1</kbd>–<kbd>9</kbd> on the keyboard.</p>
+  </div>
+  <div class="count">
+    <span class="pumpkin-patch" aria-hidden="true">
+      <svg class="big" viewBox="0 0 24 24"><path d="M12 6.5c-1.2-.9-3.4-1-5 .2C4.6 8.4 4 11.3 4.6 14.2c.7 3.3 3 5.3 5.4 4.8.8.6 1.3.8 2 .8s1.2-.2 2-.8c2.4.5 4.7-1.5 5.4-4.8.6-2.9 0-5.8-2.4-7.5-1.6-1.2-3.8-1.1-5-.2Z" fill="#ff7a1a"/><path d="M10 7.2c-1.3 2.6-1.3 8.4 0 11.6M14 7.2c1.3 2.6 1.3 8.4 0 11.6" fill="none" stroke="#c4560f" stroke-width=".8"/><path d="M12 6.7V4.2c0-.8.6-1.4 1.6-1.6" fill="none" stroke="#4fae4f" stroke-width="1.6" stroke-linecap="round"/><g class="face" fill="#ffd34e"><path d="m7.6 11.4 2-2.2.8 2.8Z"/><path d="m16.4 11.4-2-2.2-.8 2.8Z"/><path d="M7.4 14.3c1.5 1.6 7.7 1.6 9.2 0-.4 2.2-2.4 3.3-4.6 3.3s-4.2-1.1-4.6-3.3Z"/></g></svg>
+      <svg class="small" viewBox="0 0 24 24"><path d="M12 6.5c-1.2-.9-3.4-1-5 .2C4.6 8.4 4 11.3 4.6 14.2c.7 3.3 3 5.3 5.4 4.8.8.6 1.3.8 2 .8s1.2-.2 2-.8c2.4.5 4.7-1.5 5.4-4.8.6-2.9 0-5.8-2.4-7.5-1.6-1.2-3.8-1.1-5-.2Z" fill="#f06a12"/><path d="M10 7.2c-1.3 2.6-1.3 8.4 0 11.6M14 7.2c1.3 2.6 1.3 8.4 0 11.6" fill="none" stroke="#b84d0c" stroke-width=".8"/><path d="M12 6.7V4.6c0-.6-.4-1.1-1.2-1.4" fill="none" stroke="#4fae4f" stroke-width="1.6" stroke-linecap="round"/><g class="face" fill="#ffd34e"><circle cx="9" cy="11" r="1.3"/><circle cx="15" cy="11" r="1.3"/><path d="M8.2 14.6h7.6l-1.2 1.3-1.2-1-1.4 1.2-1.4-1.2-1.2 1Z"/></g></svg>
+    </span>
+    <strong>09</strong>Approved services
+  </div>
+</section>
+
+<main class="wrap" aria-label="Approved services">
   <a class="tile" href="https://cad.echo911.com" target="_blank" rel="noopener noreferrer" data-key="1">
-    <span class="logo"><img src="newlogos/Echo911 Round.jpeg" alt="" onerror="this.parentElement.classList.add('failed')"><span class="letter">E</span></span>
-    <span class="info"><div class="name">Echo911</div><div class="desc">Dispatch &amp; CAD</div></span>
+    <span class="logo"><img src="optimized/echo911.png" alt="" width="316" height="320" decoding="async" onerror="this.parentElement.classList.add('failed')"><span class="letter">E</span></span>
+    <span class="info"><span class="tag">Dispatch</span><span class="name">Echo911</span><span class="desc">Dispatch &amp; CAD</span></span>
     <span class="key">1</span>
-    <svg class="go" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
+    <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
   </a>
 
   <a class="tile" href="https://therms.app" target="_blank" rel="noopener noreferrer" data-key="2">
-    <span class="logo"><img src="newlogos/Therms Logo.jpg" alt="" onerror="this.parentElement.classList.add('failed')"><span class="letter">T</span></span>
-    <span class="info"><div class="name">Therms</div><div class="desc">Patrol &amp; reporting</div></span>
+    <span class="logo"><img src="optimized/therms.png" alt="" width="360" height="360" decoding="async" onerror="this.parentElement.classList.add('failed')"><span class="letter">T</span></span>
+    <span class="info"><span class="tag">Patrol</span><span class="name">Therms</span><span class="desc">Patrol &amp; reporting</span></span>
     <span class="key">2</span>
-    <svg class="go" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
+    <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
   </a>
 
   <a class="tile" href="https://www.weather.gov" target="_blank" rel="noopener noreferrer" data-key="3">
-    <span class="logo"><img src="newlogos/Weather logo.svg" alt="" onerror="this.parentElement.classList.add('failed')"><span class="letter">W</span></span>
-    <span class="info"><div class="name">Weather</div><div class="desc">National Weather Service</div></span>
+    <span class="logo"><img src="optimized/weather.svg" alt="" width="768" height="768" decoding="async" onerror="this.parentElement.classList.add('failed')"><span class="letter">W</span></span>
+    <span class="info"><span class="tag">Conditions</span><span class="name">Weather</span><span class="desc">National Weather Service</span></span>
     <span class="key">3</span>
-    <svg class="go" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
+    <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
   </a>
 
   <a class="tile" href="https://app.halovault.us/c/login" target="_blank" rel="noopener noreferrer" data-key="4">
-    <span class="logo"><img src="newlogos/Halo Logo.png" alt="" onerror="this.parentElement.classList.add('failed')"><span class="letter">H</span></span>
-    <span class="info"><div class="name">HaloVault</div><div class="desc">Secure portal</div></span>
+    <span class="logo"><img src="optimized/halo.png" alt="" width="560" height="239" decoding="async" onerror="this.parentElement.classList.add('failed')"><span class="letter">H</span></span>
+    <span class="info"><span class="tag">Secure</span><span class="name">HaloVault</span><span class="desc">Secure portal</span></span>
     <span class="key">4</span>
-    <svg class="go" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
+    <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
   </a>
 
   <a class="tile" href="https://myportal.watchtower-security.com/dashboard" target="_blank" rel="noopener noreferrer" data-key="5">
-    <span class="logo"><img src="newlogos/Watchtower Logo.png" alt="" onerror="this.parentElement.classList.add('failed')"><span class="letter">W</span></span>
-    <span class="info"><div class="name">Watchtower</div><div class="desc">Security dashboard</div></span>
+    <span class="logo"><img src="optimized/watchtower.png" alt="" width="532" height="167" decoding="async" onerror="this.parentElement.classList.add('failed')"><span class="letter">W</span></span>
+    <span class="info"><span class="tag">Security</span><span class="name">Watchtower</span><span class="desc">Security dashboard</span></span>
     <span class="key">5</span>
-    <svg class="go" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
+    <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
   </a>
 
   <a class="tile" href="https://mail.google.com" target="_blank" rel="noopener noreferrer" data-key="6">
-    <span class="logo"><img src="newlogos/Gmail logo.png" alt="" onerror="this.parentElement.classList.add('failed')"><span class="letter">G</span></span>
-    <span class="info"><div class="name">Gmail</div><div class="desc">Officer email</div></span>
+    <span class="logo"><img src="optimized/gmail.png" alt="" width="560" height="315" decoding="async" onerror="this.parentElement.classList.add('failed')"><span class="letter">G</span></span>
+    <span class="info"><span class="tag">Comms</span><span class="name">Gmail</span><span class="desc">Officer email</span></span>
     <span class="key">6</span>
-    <svg class="go" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
+    <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
   </a>
 
   <a class="tile" href="https://sci.ccc.nashville.gov/" target="_blank" rel="noopener noreferrer" data-key="7">
-    <span class="logo"><img src="newlogos/Nashville Court Logo.png" alt="" onerror="this.parentElement.classList.add('failed')"><span class="letter">N</span></span>
-    <span class="info"><div class="name">Nashville Courts</div><div class="desc">Court records (CCC)</div></span>
+    <span class="logo"><img src="optimized/nashville.png" alt="" width="320" height="320" decoding="async" onerror="this.parentElement.classList.add('failed')"><span class="letter">N</span></span>
+    <span class="info"><span class="tag">Courts</span><span class="name">Nashville Courts</span><span class="desc">Court records (CCC)</span></span>
     <span class="key">7</span>
-    <svg class="go" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
+    <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
   </a>
 
   <a class="tile" href="https://law.justia.com/" target="_blank" rel="noopener noreferrer" data-key="8">
-    <span class="logo"><img src="newlogos/Justua Law Logo.jpg" alt="" onerror="this.parentElement.classList.add('failed')"><span class="letter">J</span></span>
-    <span class="info"><div class="name">Justia Law</div><div class="desc">Legal reference</div></span>
+    <span class="logo"><img src="newlogos/Justua Law Logo.jpg" alt="" width="300" height="300" decoding="async" onerror="this.parentElement.classList.add('failed')"><span class="letter">J</span></span>
+    <span class="info"><span class="tag">Legal</span><span class="name">Justia Law</span><span class="desc">Legal reference</span></span>
     <span class="key">8</span>
-    <svg class="go" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
+    <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
   </a>
 
   <a class="tile" href="https://cssgai.org" target="_blank" rel="noopener noreferrer" data-key="9">
-    <span class="logo dark"><img src="newlogos/CSSGAI Logo.png" alt="" onerror="this.parentElement.classList.add('failed')"><span class="letter" style="color:#e8eaef">C</span></span>
-    <span class="info"><div class="name">CSSGAI</div><div class="desc">CSSGAI portal</div></span>
+    <span class="logo"><img src="optimized/cssgai.jpg" alt="" width="360" height="360" decoding="async" onerror="this.parentElement.classList.add('failed')"><span class="letter">C</span></span>
+    <span class="info"><span class="tag">Portal</span><span class="name">CSSGAI</span><span class="desc">CSSGAI portal</span></span>
     <span class="key">9</span>
-    <svg class="go" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
+    <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
   </a>
 </main>
 
 <footer class="statusbar" aria-label="Kiosk status">
-  <span>Authorized personnel only <span aria-hidden="true">•</span> Activity may be monitored</span>
-  <span class="network" id="networkStatus" role="status"><span class="network-dot" aria-hidden="true"></span><span id="networkText">Network connected</span></span>
+  <div class="wrap">
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z"/></svg>Authorized personnel only<span class="notice-more">· Activity may be monitored and recorded</span></span>
+    <span>Corvus Protection Group</span>
+  </div>
 </footer>
 
+<svg class="web web-tl" viewBox="0 0 120 120" aria-hidden="true"><g fill="none" stroke="#fff" stroke-width=".8" stroke-linejoin="round"><path d="M0 0 120 0M0 0 116 31M0 0 104 60M0 0 85 85M0 0 60 104M0 0 31 116M0 0 0 120"/><path d="M30 0 29 7.8 26 15 21.2 21.2 15 26 7.8 29 0 30"/><path d="M55 0 53.1 14.2 47.6 27.5 38.9 38.9 27.5 47.6 14.2 53.1 0 55"/><path d="M80 0 77.3 20.7 69.3 40 56.6 56.6 40 69.3 20.7 77.3 0 80"/><path d="M105 0 101.4 27.2 90.9 52.5 74.2 74.2 52.5 90.9 27.2 101.4 0 105"/></g></svg>
+<svg class="web web-tr" viewBox="0 0 120 120" aria-hidden="true"><g fill="none" stroke="#fff" stroke-width=".8" stroke-linejoin="round"><path d="M0 0 120 0M0 0 116 31M0 0 104 60M0 0 85 85M0 0 60 104M0 0 31 116M0 0 0 120"/><path d="M30 0 29 7.8 26 15 21.2 21.2 15 26 7.8 29 0 30"/><path d="M55 0 53.1 14.2 47.6 27.5 38.9 38.9 27.5 47.6 14.2 53.1 0 55"/><path d="M80 0 77.3 20.7 69.3 40 56.6 56.6 40 69.3 20.7 77.3 0 80"/><path d="M105 0 101.4 27.2 90.9 52.5 74.2 74.2 52.5 90.9 27.2 101.4 0 105"/></g></svg>
+<div class="bats" aria-hidden="true">
+  <span class="bat b1"><span class="bob"><svg viewBox="0 0 64 30"><path d="M32 9c1.6-2.6 2.4-5.4 2.6-7.6l1.9 4c2.4-.7 3.8 0 4.9 1.1C45 3.2 51.4 1.2 58 2c-2.8 2-4 5.2-3.8 9.4-3-2-7-1.9-9 1.1-2.1-2-6.1-2-8.1 1.2C35.9 12 34.2 10.8 32 10.8s-3.9 1.2-5.1 2.9c-2-3.2-6-3.2-8.1-1.2-2-3-6-3.1-9-1.1.2-4.2-1-7.4-3.8-9.4 6.6-.8 13 1.2 16.6 5.5 1.1-1.1 2.5-1.8 4.9-1.1l1.9-4c.2 2.2 1 5 2.6 7.6Z" fill="#2a2a2f" stroke="#ffffffa6" stroke-width="1.1"/><circle cx="30.5" cy="7.2" r=".9" fill="#ff9a3c"/><circle cx="33.5" cy="7.2" r=".9" fill="#ff9a3c"/></svg></span></span>
+  <span class="bat b2"><span class="bob"><svg viewBox="0 0 64 30"><path d="M32 9c1.6-2.6 2.4-5.4 2.6-7.6l1.9 4c2.4-.7 3.8 0 4.9 1.1C45 3.2 51.4 1.2 58 2c-2.8 2-4 5.2-3.8 9.4-3-2-7-1.9-9 1.1-2.1-2-6.1-2-8.1 1.2C35.9 12 34.2 10.8 32 10.8s-3.9 1.2-5.1 2.9c-2-3.2-6-3.2-8.1-1.2-2-3-6-3.1-9-1.1.2-4.2-1-7.4-3.8-9.4 6.6-.8 13 1.2 16.6 5.5 1.1-1.1 2.5-1.8 4.9-1.1l1.9-4c.2 2.2 1 5 2.6 7.6Z" fill="#2a2a2f" stroke="#ffffffa6" stroke-width="1.1"/><circle cx="30.5" cy="7.2" r=".9" fill="#ff9a3c"/><circle cx="33.5" cy="7.2" r=".9" fill="#ff9a3c"/></svg></span></span>
+  <span class="bat b3"><span class="bob"><svg viewBox="0 0 64 30"><path d="M32 9c1.6-2.6 2.4-5.4 2.6-7.6l1.9 4c2.4-.7 3.8 0 4.9 1.1C45 3.2 51.4 1.2 58 2c-2.8 2-4 5.2-3.8 9.4-3-2-7-1.9-9 1.1-2.1-2-6.1-2-8.1 1.2C35.9 12 34.2 10.8 32 10.8s-3.9 1.2-5.1 2.9c-2-3.2-6-3.2-8.1-1.2-2-3-6-3.1-9-1.1.2-4.2-1-7.4-3.8-9.4 6.6-.8 13 1.2 16.6 5.5 1.1-1.1 2.5-1.8 4.9-1.1l1.9-4c.2 2.2 1 5 2.6 7.6Z" fill="#2a2a2f" stroke="#ffffffa6" stroke-width="1.1"/><circle cx="30.5" cy="7.2" r=".9" fill="#ff9a3c"/><circle cx="33.5" cy="7.2" r=".9" fill="#ff9a3c"/></svg></span></span>
+  <span class="bat b4"><span class="bob"><svg viewBox="0 0 64 30"><path d="M32 9c1.6-2.6 2.4-5.4 2.6-7.6l1.9 4c2.4-.7 3.8 0 4.9 1.1C45 3.2 51.4 1.2 58 2c-2.8 2-4 5.2-3.8 9.4-3-2-7-1.9-9 1.1-2.1-2-6.1-2-8.1 1.2C35.9 12 34.2 10.8 32 10.8s-3.9 1.2-5.1 2.9c-2-3.2-6-3.2-8.1-1.2-2-3-6-3.1-9-1.1.2-4.2-1-7.4-3.8-9.4 6.6-.8 13 1.2 16.6 5.5 1.1-1.1 2.5-1.8 4.9-1.1l1.9-4c.2 2.2 1 5 2.6 7.6Z" fill="#2a2a2f" stroke="#ffffffa6" stroke-width="1.1"/><circle cx="30.5" cy="7.2" r=".9" fill="#ff9a3c"/><circle cx="33.5" cy="7.2" r=".9" fill="#ff9a3c"/></svg></span></span>
+</div>
 
-
+<div class="toast" id="toast" role="status" aria-live="polite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg><span id="toastText">Opening</span></div>
 
 <script>
 (function(){
-  var g=document.getElementById('greeting');
-  var clockTime=document.getElementById('clockTime'),clockSeconds=document.getElementById('clockSeconds');
-  var clockPeriod=document.getElementById('clockPeriod'),clockDate=document.getElementById('clockDate');
+  var root=document.documentElement;
+
+  // Clock: only text nodes change each second, so the blinking colon keeps its rhythm.
+  var g=document.getElementById('greeting'),clockTime=document.getElementById('clockTime');
+  var clockH=document.getElementById('clockH'),clockM=document.getElementById('clockM'),clockSeconds=document.getElementById('clockSeconds');
+  var clockPeriod=document.getElementById('clockPeriod'),clockDate=document.getElementById('clockDate'),lastMin=-1;
+  // Halloween decoration: October only, so it disappears on November 1. Preview with ?halloween=1.
+  var forceSpooky=/[?&]halloween=1/.test(location.search);
   function tick(){
-    var n=new Date(),h=n.getHours(),m=String(n.getMinutes()).padStart(2,'0');
-    clockTime.textContent=((h%12)||12)+':'+m;
+    var n=new Date(),h=n.getHours(),mi=n.getMinutes();
+    clockSeconds.textContent=String(n.getSeconds()).padStart(2,'0');
+    if(mi===lastMin)return;
+    lastMin=mi;
+    root.classList.toggle('spooky',forceSpooky||n.getMonth()===9);
+    clockH.textContent=(h%12)||12;clockM.textContent=String(mi).padStart(2,'0');
     clockTime.dateTime=n.toISOString();
     clockTime.setAttribute('aria-label',n.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}));
-    clockSeconds.textContent=String(n.getSeconds()).padStart(2,'0');
     clockPeriod.textContent=h<12?'AM':'PM';
     clockDate.textContent=n.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric',year:'numeric'});
     g.textContent=(h<5?'Overnight shift':h<12?'Good morning':h<17?'Good afternoon':h<21?'Good evening':'Overnight shift');
@@ -310,19 +639,67 @@ main{width:100%;height:auto;min-height:0;margin:0 auto;grid-template-columns:rep
   window.addEventListener('offline',updateNetwork);
   updateNetwork();
 
+  // Boot sequence. The progress bar holds at 90% until the page has loaded (max 4.5s),
+  // and frame timing during the intro switches on lite mode if this machine struggles.
+  var loader=document.getElementById('loader'),bar=document.getElementById('loaderBar');
+  var pct=document.getElementById('loaderPct'),label=document.getElementById('loaderText');
+  var reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var bootMs=reduced?0:root.classList.contains('lite')?2400:2900;
+  var start=performance.now(),last=start,slow=0,frames=0,loaded=document.readyState==='complete',lastLabel='';
+  window.addEventListener('load',function(){loaded=true});
+  function boot(now){
+    var dt=now-last;last=now;frames++;
+    if(frames>3&&dt>45)slow++;
+    if(slow>8)root.classList.add('lite');
+    var t=bootMs?Math.min(1,(now-start)/bootMs):1;
+    if(!loaded&&now-start<4500)t=Math.min(t,.9);
+    var e=1-Math.pow(1-t,3);
+    bar.style.transform='scaleX('+e+')';
+    pct.textContent=String(Math.round(e*100)).padStart(3,'0');
+    var l=e<.3?'Initializing':e<.7?'Loading services':e<1?'Securing session':'Access granted';
+    if(l!==lastLabel){label.textContent=l;lastLabel=l}
+    if(t<1){requestAnimationFrame(boot);return}
+    setTimeout(function(){
+      root.classList.add('closing');
+      setTimeout(function(){
+        root.classList.add('open');
+        setTimeout(function(){loader.remove();root.classList.remove('closing')},900);
+      },reduced?0:380);
+    },reduced?0:300);
+  }
+  requestAnimationFrame(boot);
+
   document.addEventListener('keydown',function(e){
     if(e.ctrlKey||e.altKey||e.metaKey||e.repeat||! /^[1-9]$/.test(e.key))return;
     var a=document.querySelector('.tile[data-key="'+e.key+'"]');
     if(a){a.focus();a.click();}
   });
 
-  document.querySelectorAll('.tile').forEach(function(a){
-    a.addEventListener('click',function(){
+  var toast=document.getElementById('toast'),toastText=document.getElementById('toastText'),toastTimer;
+  document.querySelectorAll('.tile').forEach(function(a,i){
+    a.style.setProperty('--i',i);
+    ['spot','streak','edge'].forEach(function(c){var s=document.createElement('span');s.className=c;s.setAttribute('aria-hidden','true');a.prepend(s)});
+
+    // Spotlight follows the cursor at most once per frame, moved by transform only.
+    var spot=a.querySelector('.spot'),px=0,py=0,queued=false;
+    a.addEventListener('pointermove',function(e){
+      if(root.classList.contains('lite'))return;
+      var r=a.getBoundingClientRect();px=e.clientX-r.left;py=e.clientY-r.top;
+      if(queued)return;queued=true;
+      requestAnimationFrame(function(){queued=false;spot.style.transform='translate('+px+'px,'+py+'px)'});
+    });
+
+    a.addEventListener('click',function(e){
+      var r=a.getBoundingClientRect(),rp=document.createElement('span');
+      var x=e.clientX?e.clientX-r.left:r.width/2,y=e.clientY?e.clientY-r.top:r.height/2;
+      rp.className='ripple';rp.style.setProperty('--at','translate('+x+'px,'+y+'px)');rp.style.transform='translate('+x+'px,'+y+'px)';
+      a.appendChild(rp);setTimeout(function(){rp.remove()},650);
       a.classList.add('launching');setTimeout(function(){a.classList.remove('launching')},1200);
+      toastText.textContent='Opening '+a.querySelector('.name').textContent;
+      toast.classList.add('show');clearTimeout(toastTimer);
+      toastTimer=setTimeout(function(){toast.classList.remove('show')},2200);
     });
   });
-
-
 
   document.addEventListener('contextmenu',function(e){e.preventDefault()});
   document.addEventListener('dragstart',function(e){e.preventDefault()});
