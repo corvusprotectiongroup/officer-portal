@@ -678,6 +678,41 @@ html.lite .falling-leaf:nth-child(n+5){display:none}
 @media(max-width:680px){.falling-leaf{width:calc(var(--size)*.8);height:calc(var(--size)*.8)}.falling-leaf:nth-child(n+7){display:none}}
 @media(prefers-reduced-motion:reduce){.falling-leaf{display:none!important}}
 
+
+/* Thanksgiving arrival screen. */
+.thanksgiving .door{background-color:#100e0b}
+.thanksgiving .door-top{background-image:radial-gradient(ellipse 70% 100% at 50% 100%,#b77b3340,transparent 70%),linear-gradient(#d8b57b05 1px,transparent 1px),linear-gradient(90deg,#d8b57b05 1px,transparent 1px)}
+.thanksgiving .door-bottom{background-image:radial-gradient(ellipse 70% 100% at 50% 0%,#89502b30,transparent 70%),linear-gradient(#d8b57b05 1px,transparent 1px),linear-gradient(90deg,#d8b57b05 1px,transparent 1px)}
+.thanksgiving .loader .corner{border-color:#caa66a66}
+.thanksgiving .lk-glow{background:radial-gradient(closest-side,#e1ac4c40,#9e5d2518 55%,transparent)}
+.thanksgiving .lk-shine::before{background:linear-gradient(100deg,transparent,#ffe2aabf,transparent)}
+.thanksgiving .loader-core{gap:clamp(18px,3.5vh,30px);transform:translate(-50%,-52%)}
+.loader-season{display:flex;align-items:center;justify-content:center;gap:14px;width:100%;color:#d6b27b;font:600 clamp(8px,.8vw,11px) "Montserrat","Segoe UI",sans-serif;letter-spacing:.24em;text-transform:uppercase;white-space:nowrap;animation:fade .8s ease .1s backwards}
+.loader-season>span{width:36px;height:1px;background:linear-gradient(90deg,transparent,#c39758)}
+.loader-season>span:last-child{transform:scaleX(-1)}
+.loader-wish{font:600 clamp(18px,2.2vw,30px) "Montserrat","Segoe UI",sans-serif;letter-spacing:.04em;color:#f1d5a5;animation:fade-up .7s ease .7s backwards;text-align:center}
+.thanksgiving .loader-meta{font-family:"Montserrat","Segoe UI",sans-serif;letter-spacing:.13em;color:#b9a68b}
+.thanksgiving .loader-meta b{color:#efd6ad}
+.thanksgiving .loader-bar{height:3px;border-radius:3px;background:#d9b77b17}
+.thanksgiving .loader-bar i{background:linear-gradient(90deg,#955327,#d9ac62,#fae0ad)}
+.loader-autumn{position:absolute;inset:0;pointer-events:none;transition:opacity .25s ease}
+.loader-autumn-leaf{position:absolute;left:var(--lx);top:var(--ly);width:var(--ls);height:var(--ls);background:url("assets/autumn-leaves.png") var(--sprite)/200% 200% no-repeat;opacity:.6;animation:loader-leaf-drift var(--ld) ease-in-out -2s infinite alternate}
+@keyframes loader-leaf-drift{from{transform:translate(-8px,-12px) rotate(var(--lr)) rotateY(20deg)}to{transform:translate(15px,20px) rotate(calc(var(--lr) + 28deg)) rotateY(58deg)}}
+html.closing .loader-autumn{opacity:0}
+html.lite .loader-autumn-leaf:nth-child(n+4){display:none}
+/* Translucent service panels expose the wallpaper without fading labels or logos. */
+.thanksgiving body::before{opacity:.5}
+.thanksgiving body::after{background:radial-gradient(ellipse at 0 20%,#a45b2414,transparent 48%),radial-gradient(ellipse at 100% 85%,#8e412412,transparent 45%),linear-gradient(120deg,#0c0b0938,#09090973)}
+.thanksgiving .tile{background:linear-gradient(135deg,#211d176b,#1111108c);border-color:#d5b57840;box-shadow:inset 0 1px 0 #ffe3ad14,0 6px 20px #0004}
+.thanksgiving .tile::before{background:linear-gradient(120deg,#bd853921,#100d0814 70%)}
+.thanksgiving .tile .name,.thanksgiving .tile .desc{text-shadow:0 1px 4px #000,0 2px 12px #0009}
+.thanksgiving .tile .desc{color:#ded9d0}
+.thanksgiving .tile .logo::before{opacity:.35}
+.thanksgiving .tile:hover .logo::before{opacity:.65}
+.thanksgiving .tile .spot{background:radial-gradient(circle,#d6a75c14,transparent 65%)}
+@media(max-width:560px){.loader-season{font-size:8px;letter-spacing:.12em;gap:8px}.loader-season>span{width:20px}.loader-autumn-leaf{width:calc(var(--ls)*.7);height:calc(var(--ls)*.7)}}
+@media(prefers-reduced-motion:reduce){.loader-autumn-leaf{animation:none}}
+
 </style>
 </head>
 <body>
@@ -685,12 +720,12 @@ html.lite .falling-leaf:nth-child(n+5){display:none}
 <div class="loader" id="loader" aria-hidden="true">
   <div class="door door-top"></div>
   <div class="door door-bottom"></div>
-  <div class="seam"></div>
+  <div class="seam"></div><div class="loader-autumn" aria-hidden="true"><span class="loader-autumn-leaf" style="--lx:9%;--ly:18%;--ls:58px;--ld:4s;--lr:-60deg;--sprite:0% 0%"></span><span class="loader-autumn-leaf" style="--lx:25%;--ly:68%;--ls:36px;--ld:5s;--lr:-17deg;--sprite:100% 0%"></span><span class="loader-autumn-leaf" style="--lx:84%;--ly:24%;--ls:48px;--ld:6s;--lr:26deg;--sprite:0% 100%"></span><span class="loader-autumn-leaf" style="--lx:73%;--ly:76%;--ls:34px;--ld:4s;--lr:69deg;--sprite:100% 100%"></span><span class="loader-autumn-leaf" style="--lx:41%;--ly:9%;--ls:28px;--ld:5s;--lr:112deg;--sprite:0% 0%"></span><span class="loader-autumn-leaf" style="--lx:92%;--ly:54%;--ls:39px;--ld:6s;--lr:155deg;--sprite:100% 0%"></span><span class="loader-autumn-leaf" style="--lx:6%;--ly:86%;--ls:30px;--ld:4s;--lr:198deg;--sprite:0% 100%"></span></div>
   <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
   <span class="loader-tag tl">Corvus Protection Group</span>
-  <span class="loader-tag br">Officer Operations</span>
-  <span class="loader-tag br spooky-text">Happy Halloween</span>
-  <div class="loader-core">
+  <span class="loader-tag br">Thankful for those who serve</span>
+
+  <div class="loader-core"><div class="loader-season"><span></span>Thanksgiving at Corvus<span></span></div>
     <div class="lockup">
       <div class="lk-glow"></div>
       <div class="lk-line"></div>
@@ -698,7 +733,7 @@ html.lite .falling-leaf:nth-child(n+5){display:none}
       <div class="lk-word"></div>
       <div class="lk-shine"></div>
     </div>
-    <div class="loader-status">
+    <div class="loader-wish">Happy Thanksgiving</div><div class="loader-status">
       <div class="loader-meta"><span id="loaderText">Initializing</span><b id="loaderPct">000</b></div>
       <div class="loader-bar"><i id="loaderBar"></i></div>
     </div>
@@ -920,7 +955,7 @@ html.lite .falling-leaf:nth-child(n+5){display:none}
     var e=1-Math.pow(1-t,3);
     bar.style.transform='scaleX('+e+')';
     pct.textContent=String(Math.round(e*100)).padStart(3,'0');
-    var l=e<.3?'Initializing':e<.7?'Loading services':e<1?'Securing session':'Access granted';
+    var l=e<.3?'Preparing your shift':e<.7?'Gathering your services':e<1?'Securing your session':'Ready to serve';
     if(l!==lastLabel){label.textContent=l;lastLabel=l}
     if(t<1){requestAnimationFrame(boot);return}
     setTimeout(function(){
