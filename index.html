@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Corvus | Officer Operations</title>
-<!-- Browser-tab and bookmark icons: the Corvus crest. -->
+<!-- Thanksgiving turkey crest: browser tabs and bookmarks. -->
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
@@ -18,7 +18,7 @@
   if(q)lite=q[1]==='1';
   else lite=(n.hardwareConcurrency&&n.hardwareConcurrency<=2)||(n.deviceMemory&&n.deviceMemory<=2)||(n.connection&&n.connection.saveData);
   if(lite)document.documentElement.classList.add('lite');
-  if(new Date().getMonth()===9||/[?&]halloween=1/.test(location.search))document.documentElement.classList.add('spooky');
+  document.documentElement.classList.add('thanksgiving');
 })();
 </script>
 <link rel="preload" href="corvus-logo.png" as="image">
@@ -557,6 +557,41 @@ html.lite .spot,html.lite .streak,html.lite .lk-shine,html.lite .lk-glow,html.li
   .loader-core{--w:84vw}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}.loader{display:none}}
+/* Thanksgiving: restrained harvest accents, with no extra motion. */
+html.thanksgiving{--red:#b96c35;--red-hot:#e7b46a;--red-soft:#b96c3540;--gold:#d6b36e;--gold-soft:#d6b36e40}
+.thanksgiving .topbar,.thanksgiving .statusbar{border-color:#d6b36e40;background:radial-gradient(ellipse at top left,#b96c3529,transparent 55%),linear-gradient(180deg,#34302b,#1a1918)}
+.thanksgiving .topbar{box-shadow:inset 0 1px 0 #f4d29a26,0 16px 40px #000c}
+.harvest-note{display:inline-flex;align-items:center;gap:8px;color:#e7bd7c;font-size:10px;letter-spacing:.12em;margin-left:14px;white-space:nowrap}
+.harvest-leaf{display:inline-block;width:13px;height:18px;background:linear-gradient(135deg,#e8bd76,#b96c35);border-radius:2px 12px 2px 12px;transform:rotate(-25deg);flex-shrink:0}
+.thanksgiving .tag::before{background:#d6b36e}
+.thanksgiving .count{position:relative}
+.thanksgiving .count::before{content:"";position:absolute;width:18px;height:26px;left:-32px;top:10px;border-radius:2px 18px 2px 18px;background:linear-gradient(135deg,#e8bd76,#9a4828);transform:rotate(22deg);opacity:.7;pointer-events:none}
+.thanksgiving .sb-right .sb-text small{color:#d6b36e}
+@media(max-width:680px){.harvest-note{display:flex;margin:8px 0 0;font-size:9px}.thanksgiving .count::before{display:none}}
+
+/* Autumn atmosphere: compositor-only movement and non-interactive decorations. */
+.harvest-atmosphere{position:fixed;inset:0;pointer-events:none;z-index:4;overflow:hidden}
+.falling-leaf{position:absolute;top:-50px;left:var(--x);width:var(--size);height:calc(var(--size)*1.2);opacity:0;animation:harvest-fall var(--duration) linear var(--delay) infinite;will-change:transform,opacity}
+.falling-leaf i{display:block;width:100%;height:100%;animation:harvest-flutter 4.5s ease-in-out var(--delay) infinite alternate}
+.falling-leaf svg{display:block;width:100%;height:100%;filter:drop-shadow(0 2px 2px #0005)}
+@keyframes harvest-fall{0%{opacity:0;transform:translate3d(0,-4vh,0) rotate(0)}8%{opacity:.5}85%{opacity:.5}100%{opacity:0;transform:translate3d(var(--drift),calc(100vh + 90px),0) rotate(var(--turn))}}
+@keyframes harvest-flutter{from{transform:translateX(-13px) rotate(-18deg) scaleX(.65)}to{transform:translateX(13px) rotate(18deg) scaleX(1)}}
+.harvest-corner{position:absolute;bottom:2px;width:100px;height:62px;display:flex;align-items:end;opacity:.55}
+.harvest-corner-left{left:3px;transform:rotate(-9deg)}
+.harvest-corner-right{right:3px;transform:scaleX(-1) rotate(-9deg)}
+.harvest-corner>svg{width:30px;height:38px;color:#d8ad61;flex:none;transform:rotate(-35deg)}
+.harvest-corner>svg:nth-child(2){width:52px;height:48px;margin-left:-13px;transform:none}
+.harvest-corner>svg:last-child{margin-left:-14px;transform:rotate(45deg);color:#a94e32}
+.thanksgiving .topbar::after{content:"";position:absolute;bottom:-1px;left:18%;right:18%;height:1px;background:linear-gradient(90deg,transparent,#d9ac6366,transparent);pointer-events:none}
+.thanksgiving .tile:hover,.thanksgiving .tile:focus-visible{outline:1px solid #d6b36e66;outline-offset:2px}
+.harvest-toggle{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:4px 8px;border:1px solid #d6b36e40;border-radius:20px;background:#d6b36e0c;color:#e7bd7c;font:500 10px "Montserrat","Segoe UI",sans-serif;letter-spacing:.02em;cursor:pointer;white-space:nowrap}
+.harvest-toggle:hover{background:#d6b36e25}.harvest-toggle:focus-visible{outline:2px solid #e7bd7c;outline-offset:3px}
+.harvest-toggle svg{width:12px;height:14px}
+.leaves-paused .falling-leaf,.leaves-paused .falling-leaf i{animation-play-state:paused}
+html.lite .falling-leaf:nth-child(n+5){display:none}
+@media(max-width:680px){.falling-leaf:nth-child(n+7){display:none}.harvest-corner{width:70px;opacity:.3;transform:scale(.7);transform-origin:bottom left}.harvest-corner-right{transform:scale(-.7,.7);transform-origin:bottom center}.eyebrow{flex-wrap:wrap}.harvest-note{flex-wrap:wrap;white-space:normal}}
+@media(prefers-reduced-motion:reduce){.falling-leaf,.harvest-toggle{display:none!important}}
+
 </style>
 </head>
 <body>
@@ -586,7 +621,7 @@ html.lite .spot,html.lite .streak,html.lite .lk-shine,html.lite .lk-glow,html.li
 
 <div class="app">
 <header class="topbar wrap" aria-label="Corvus Protection Group kiosk">
-  <img class="company-logo" src="corvus-logo.png" alt="Corvus Protection Group" width="768" height="216">
+  <img class="company-logo" src="corvus-logo.png" alt="Corvus Protection Group — Thanksgiving turkey crest" width="768" height="216">
   <div class="station">
     <span class="station-label">Officer Operations</span>
     <span class="greeting" id="greeting">Good morning</span>
@@ -640,7 +675,7 @@ html.lite .spot,html.lite .streak,html.lite .lk-shine,html.lite .lk-glow,html.li
 
 <section class="intro wrap">
   <div>
-    <div class="eyebrow"><span class="dot" aria-hidden="true"></span>Service launcher<span class="spooky-text">· Trick or treat</span></div>
+    <div class="eyebrow"><span class="dot" aria-hidden="true"></span>Service launcher<span class="harvest-note"><i class="harvest-leaf" aria-hidden="true"></i>Happy Thanksgiving <button class="harvest-toggle" id="harvestToggle" type="button" aria-pressed="false" aria-label="Pause or resume falling autumn leaves"><svg viewBox="0 0 40 48" fill="none"><path d="m20 3 5 10 8-5-1 12 7 2-10 10 1 7-9-2-1 8-2-8-10 2 2-8L1 22l8-2L8 8l8 5Z" fill="currentColor"/><path d="M20 12v33M10 23l10 9 10-9M14 16l6 7 6-7" stroke="#452414" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/></svg><span>Pause leaves</span></button></span><span class="spooky-text">· Trick or treat</span></div>
     <h1>Select a service <em>to launch</em></h1>
     <p class="hint">Tap a tile, or press <kbd>1</kbd>–<kbd>9</kbd> on the keyboard.</p>
   </div>
@@ -729,7 +764,7 @@ html.lite .spot,html.lite .streak,html.lite .lk-shine,html.lite .lk-glow,html.li
       <span class="sb-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>Opens in a new tab</span>
     </div>
     <div class="sb-item sb-right"><span class="ghost" aria-hidden="true"><svg viewBox="0 0 24 28"><path d="M12 1C6.5 1 3 5.5 3 11v15l3-2.2 3 2.2 3-2.2 3 2.2 3-2.2 3 2.2V11c0-5.5-3.5-10-9-10Z" fill="#f1f1f3"/><ellipse cx="9" cy="11" rx="1.4" ry="2" fill="#111"/><ellipse cx="15" cy="11" rx="1.4" ry="2" fill="#111"/><ellipse cx="12" cy="16.5" rx="1.3" ry="1.8" fill="#111"/></svg></span>
-      <span class="sb-text"><strong>Corvus Protection Group</strong><small>Officer operations portal</small></span>
+      <span class="sb-text"><strong>Corvus Protection Group</strong><small>Thankful for those who serve</small></span>
       <span class="sb-crest" aria-hidden="true"></span>
     </div>
 </footer>
@@ -765,7 +800,7 @@ html.lite .spot,html.lite .streak,html.lite .lk-shine,html.lite .lk-glow,html.li
     clockSeconds.textContent=String(n.getSeconds()).padStart(2,'0');
     if(mi===lastMin)return;
     lastMin=mi;
-    root.classList.toggle('spooky',forceSpooky||n.getMonth()===9);
+    root.classList.remove('spooky');
     clockH.textContent=(h%12)||12;clockM.textContent=String(mi).padStart(2,'0');
     clockTime.dateTime=n.toISOString();
     clockTime.setAttribute('aria-label',n.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}));
@@ -851,6 +886,18 @@ html.lite .spot,html.lite .streak,html.lite .lk-shine,html.lite .lk-glow,html.li
   document.addEventListener('dragstart',function(e){e.preventDefault()});
 
   setTimeout(function(){location.reload()},(function(){var n=new Date(),r=new Date(n);r.setHours(24,5,0,0);return r-n})());
+})();
+</script>
+<div class="harvest-atmosphere" aria-hidden="true"><span class="falling-leaf" style="--x:3%;--duration:17s;--delay:-0s;--size:14px;--drift: 35px;--turn:180deg;color:#cc783d"><i><svg viewBox="0 0 40 48" fill="none"><path d="m20 3 5 10 8-5-1 12 7 2-10 10 1 7-9-2-1 8-2-8-10 2 2-8L1 22l8-2L8 8l8 5Z" fill="currentColor"/><path d="M20 12v33M10 23l10 9 10-9M14 16l6 7 6-7" stroke="#452414" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/></svg></i></span><span class="falling-leaf" style="--x:40%;--duration:19s;--delay:-3.7s;--size:19px;--drift:-52px;--turn:-203deg;color:#d8ad61"><i><svg viewBox="0 0 40 48" fill="none"><path d="m20 3 5 10 8-5-1 12 7 2-10 10 1 7-9-2-1 8-2-8-10 2 2-8L1 22l8-2L8 8l8 5Z" fill="currentColor"/><path d="M20 12v33M10 23l10 9 10-9M14 16l6 7 6-7" stroke="#452414" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/></svg></i></span><span class="falling-leaf" style="--x:77%;--duration:21s;--delay:-7.4s;--size:24px;--drift: 69px;--turn:226deg;color:#aa4b30"><i><svg viewBox="0 0 40 48" fill="none"><path d="m20 3 5 10 8-5-1 12 7 2-10 10 1 7-9-2-1 8-2-8-10 2 2-8L1 22l8-2L8 8l8 5Z" fill="currentColor"/><path d="M20 12v33M10 23l10 9 10-9M14 16l6 7 6-7" stroke="#452414" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/></svg></i></span><span class="falling-leaf" style="--x:14%;--duration:23s;--delay:-11.100000000000001s;--size:29px;--drift:-86px;--turn:-249deg;color:#bf943d"><i><svg viewBox="0 0 40 48" fill="none"><path d="m20 3 5 10 8-5-1 12 7 2-10 10 1 7-9-2-1 8-2-8-10 2 2-8L1 22l8-2L8 8l8 5Z" fill="currentColor"/><path d="M20 12v33M10 23l10 9 10-9M14 16l6 7 6-7" stroke="#452414" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/></svg></i></span><span class="falling-leaf" style="--x:51%;--duration:25s;--delay:-14.8s;--size:14px;--drift: 103px;--turn:272deg;color:#cc783d"><i><svg viewBox="0 0 40 48" fill="none"><path d="m20 3 5 10 8-5-1 12 7 2-10 10 1 7-9-2-1 8-2-8-10 2 2-8L1 22l8-2L8 8l8 5Z" fill="currentColor"/><path d="M20 12v33M10 23l10 9 10-9M14 16l6 7 6-7" stroke="#452414" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/></svg></i></span><span class="falling-leaf" style="--x:88%;--duration:27s;--delay:-18.5s;--size:19px;--drift:-35px;--turn:-295deg;color:#d8ad61"><i><svg viewBox="0 0 40 48" fill="none"><path d="m20 3 5 10 8-5-1 12 7 2-10 10 1 7-9-2-1 8-2-8-10 2 2-8L1 22l8-2L8 8l8 5Z" fill="currentColor"/><path d="M20 12v33M10 23l10 9 10-9M14 16l6 7 6-7" stroke="#452414" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/></svg></i></span><span class="falling-leaf" style="--x:25%;--duration:17s;--delay:-22.200000000000003s;--size:24px;--drift: 52px;--turn:318deg;color:#aa4b30"><i><svg viewBox="0 0 40 48" fill="none"><path d="m20 3 5 10 8-5-1 12 7 2-10 10 1 7-9-2-1 8-2-8-10 2 2-8L1 22l8-2L8 8l8 5Z" fill="currentColor"/><path d="M20 12v33M10 23l10 9 10-9M14 16l6 7 6-7" stroke="#452414" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/></svg></i></span><span class="falling-leaf" style="--x:62%;--duration:19s;--delay:-25.900000000000002s;--size:29px;--drift:-69px;--turn:-341deg;color:#bf943d"><i><svg viewBox="0 0 40 48" fill="none"><path d="m20 3 5 10 8-5-1 12 7 2-10 10 1 7-9-2-1 8-2-8-10 2 2-8L1 22l8-2L8 8l8 5Z" fill="currentColor"/><path d="M20 12v33M10 23l10 9 10-9M14 16l6 7 6-7" stroke="#452414" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/></svg></i></span><span class="falling-leaf" style="--x:99%;--duration:21s;--delay:-29.6s;--size:14px;--drift: 86px;--turn:364deg;color:#cc783d"><i><svg viewBox="0 0 40 48" fill="none"><path d="m20 3 5 10 8-5-1 12 7 2-10 10 1 7-9-2-1 8-2-8-10 2 2-8L1 22l8-2L8 8l8 5Z" fill="currentColor"/><path d="M20 12v33M10 23l10 9 10-9M14 16l6 7 6-7" stroke="#452414" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/></svg></i></span><span class="falling-leaf" style="--x:36%;--duration:23s;--delay:-33.300000000000004s;--size:19px;--drift:-103px;--turn:-387deg;color:#d8ad61"><i><svg viewBox="0 0 40 48" fill="none"><path d="m20 3 5 10 8-5-1 12 7 2-10 10 1 7-9-2-1 8-2-8-10 2 2-8L1 22l8-2L8 8l8 5Z" fill="currentColor"/><path d="M20 12v33M10 23l10 9 10-9M14 16l6 7 6-7" stroke="#452414" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/></svg></i></span><span class="falling-leaf" style="--x:73%;--duration:25s;--delay:-37s;--size:24px;--drift: 35px;--turn:410deg;color:#aa4b30"><i><svg viewBox="0 0 40 48" fill="none"><path d="m20 3 5 10 8-5-1 12 7 2-10 10 1 7-9-2-1 8-2-8-10 2 2-8L1 22l8-2L8 8l8 5Z" fill="currentColor"/><path d="M20 12v33M10 23l10 9 10-9M14 16l6 7 6-7" stroke="#452414" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/></svg></i></span><span class="falling-leaf" style="--x:10%;--duration:27s;--delay:-40.7s;--size:29px;--drift:-52px;--turn:-433deg;color:#bf943d"><i><svg viewBox="0 0 40 48" fill="none"><path d="m20 3 5 10 8-5-1 12 7 2-10 10 1 7-9-2-1 8-2-8-10 2 2-8L1 22l8-2L8 8l8 5Z" fill="currentColor"/><path d="M20 12v33M10 23l10 9 10-9M14 16l6 7 6-7" stroke="#452414" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/></svg></i></span><span class="falling-leaf" style="--x:47%;--duration:17s;--delay:-44.400000000000006s;--size:14px;--drift: 69px;--turn:456deg;color:#cc783d"><i><svg viewBox="0 0 40 48" fill="none"><path d="m20 3 5 10 8-5-1 12 7 2-10 10 1 7-9-2-1 8-2-8-10 2 2-8L1 22l8-2L8 8l8 5Z" fill="currentColor"/><path d="M20 12v33M10 23l10 9 10-9M14 16l6 7 6-7" stroke="#452414" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/></svg></i></span><span class="falling-leaf" style="--x:84%;--duration:19s;--delay:-48.1s;--size:19px;--drift:-86px;--turn:-479deg;color:#d8ad61"><i><svg viewBox="0 0 40 48" fill="none"><path d="m20 3 5 10 8-5-1 12 7 2-10 10 1 7-9-2-1 8-2-8-10 2 2-8L1 22l8-2L8 8l8 5Z" fill="currentColor"/><path d="M20 12v33M10 23l10 9 10-9M14 16l6 7 6-7" stroke="#452414" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/></svg></i></span><span class="falling-leaf" style="--x:21%;--duration:21s;--delay:-51.800000000000004s;--size:24px;--drift: 103px;--turn:502deg;color:#aa4b30"><i><svg viewBox="0 0 40 48" fill="none"><path d="m20 3 5 10 8-5-1 12 7 2-10 10 1 7-9-2-1 8-2-8-10 2 2-8L1 22l8-2L8 8l8 5Z" fill="currentColor"/><path d="M20 12v33M10 23l10 9 10-9M14 16l6 7 6-7" stroke="#452414" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/></svg></i></span><span class="falling-leaf" style="--x:58%;--duration:23s;--delay:-55.5s;--size:29px;--drift:-35px;--turn:-525deg;color:#bf943d"><i><svg viewBox="0 0 40 48" fill="none"><path d="m20 3 5 10 8-5-1 12 7 2-10 10 1 7-9-2-1 8-2-8-10 2 2-8L1 22l8-2L8 8l8 5Z" fill="currentColor"/><path d="M20 12v33M10 23l10 9 10-9M14 16l6 7 6-7" stroke="#452414" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/></svg></i></span><div class="harvest-corner harvest-corner-left"><svg viewBox="0 0 40 48" fill="none"><path d="m20 3 5 10 8-5-1 12 7 2-10 10 1 7-9-2-1 8-2-8-10 2 2-8L1 22l8-2L8 8l8 5Z" fill="currentColor"/><path d="M20 12v33M10 23l10 9 10-9M14 16l6 7 6-7" stroke="#452414" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/></svg><svg viewBox="0 0 80 65" fill="none"><path d="M40 18c-20-15-38 0-34 22 3 16 18 22 28 17 5 4 9 4 14 0 13 5 27-4 28-19 2-22-17-32-36-20Z" fill="#b96c35"/><path d="M30 19c-9 9-10 25 0 37m20-37c9 9 10 25 0 37M40 18v40" stroke="#edab5c" stroke-width="2" opacity=".55"/><path d="M40 19c-1-8 1-13 7-16" stroke="#999156" stroke-width="5" stroke-linecap="round"/><path d="M46 11c9-7 16-4 18 1-10 5-14 3-18-1" fill="#8d954e"/></svg><svg viewBox="0 0 40 48" fill="none"><path d="m20 3 5 10 8-5-1 12 7 2-10 10 1 7-9-2-1 8-2-8-10 2 2-8L1 22l8-2L8 8l8 5Z" fill="currentColor"/><path d="M20 12v33M10 23l10 9 10-9M14 16l6 7 6-7" stroke="#452414" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/></svg></div><div class="harvest-corner harvest-corner-right"><svg viewBox="0 0 40 48" fill="none"><path d="m20 3 5 10 8-5-1 12 7 2-10 10 1 7-9-2-1 8-2-8-10 2 2-8L1 22l8-2L8 8l8 5Z" fill="currentColor"/><path d="M20 12v33M10 23l10 9 10-9M14 16l6 7 6-7" stroke="#452414" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/></svg><svg viewBox="0 0 80 65" fill="none"><path d="M40 18c-20-15-38 0-34 22 3 16 18 22 28 17 5 4 9 4 14 0 13 5 27-4 28-19 2-22-17-32-36-20Z" fill="#b96c35"/><path d="M30 19c-9 9-10 25 0 37m20-37c9 9 10 25 0 37M40 18v40" stroke="#edab5c" stroke-width="2" opacity=".55"/><path d="M40 19c-1-8 1-13 7-16" stroke="#999156" stroke-width="5" stroke-linecap="round"/><path d="M46 11c9-7 16-4 18 1-10 5-14 3-18-1" fill="#8d954e"/></svg><svg viewBox="0 0 40 48" fill="none"><path d="m20 3 5 10 8-5-1 12 7 2-10 10 1 7-9-2-1 8-2-8-10 2 2-8L1 22l8-2L8 8l8 5Z" fill="currentColor"/><path d="M20 12v33M10 23l10 9 10-9M14 16l6 7 6-7" stroke="#452414" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/></svg></div></div>
+<script>
+(function(){
+ var toggle=document.getElementById('harvestToggle');
+ if(!toggle)return;
+ toggle.addEventListener('click',function(){
+  var paused=document.documentElement.classList.toggle('leaves-paused');
+  toggle.setAttribute('aria-pressed',String(paused));
+  toggle.querySelector('span').textContent=paused?'Resume leaves':'Pause leaves';
+ });
 })();
 </script>
 </body>
